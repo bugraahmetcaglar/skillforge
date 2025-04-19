@@ -26,3 +26,8 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
 
         return user
+
+
+class TokenSerializer(serializers.Serializer):
+    access_token = serializers.CharField()
+    refresh_token = serializers.CharField()
