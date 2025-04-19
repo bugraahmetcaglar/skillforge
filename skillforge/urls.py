@@ -16,8 +16,47 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from django.conf import settings
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+from rest_framework import permissions
+
+
+# Create API documentation schema
+schema_view = get_schema_view(
+    openapi.Info(
+        title="SkillForge API",
+        default_version="v1",
+        description="API for SkillForge",
+        terms_of_service="https://www.skillforge.example/terms/",
+        contact=openapi.Contact(email="contact@skillforge.example"),
+        license=openapi.License(name="Apache License 2.0"),
+    ),
+    public=True,
+    permission_classes=[permissions.AllowAny],
+)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    
+    # API endpoints
+    path("api/v1/user/", include("apps.user.v1.urls")),
+    path("api/v2/user", include("apps.user.v2.urls")),
+    
+    # API Documentation
+    path(
+        "docs/",
+        schema_view.with_ui("swagger", cache_timeout=0),
+        name="schema-swagger-ui",
+    ),
+    path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
 ]
+
+if settings.DEBUG:
+    try:
+        import debug_toolbar
+
+        urlpatterns.append(path("__debug__/", include(debug_toolbar.urls)))
+    except ImportError:
+        pass
