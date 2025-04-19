@@ -13,5 +13,4 @@ urlpatterns = [
     path("register/", UserRegisterAPIView.as_view(), name="register"),
     path("list/", UserListAPIView.as_view(), name="list"),
     path("<uuid:pk>/", UserDetailAPIView.as_view(), name="detail"),
-    path("me/", UserDetailAPIView.as_view()),
 ]
