@@ -42,7 +42,7 @@ urlpatterns = [
     
     # API endpoints
     path("api/v1/user/", include("apps.user.v1.urls")),
-    path("api/v2/user", include("apps.user.v2.urls")),
+    path("api/v2/", include("apps.user.v2.urls")),
     
     # API Documentation
     path(
