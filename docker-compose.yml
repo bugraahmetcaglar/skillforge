@@ -1,0 +1,81 @@
+version: '3.7'
+
+volumes:
+  postgres_data: {}
+  local_bitnami_redis_data: {}
+
+services:
+  web:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    command: python manage.py runserver 0.0.0.0:8000
+    image: skillforge
+    stdin_open: true
+    volumes:
+      - .:/code
+      - ./static:/static
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+      - celery
+    env_file:
+      - ./dev.env
+    restart:
+      unless-stopped
+
+  db:
+    restart: always
+    image: postgres:16.2-bullseye
+    env_file:
+      - ./dev.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: "skillforge-dev"
+      POSTGRES_USER: "skillforge"
+      POSTGRES_PASSWORD: "skillforge"
+
+  redis:
+    image: redis:alpine
+    env_file:
+      - ./dev.env
+    ports:
+      - "6379:6379"
+    hostname: redis
+    restart:
+      unless-stopped
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A skillforge worker -l info
+    volumes:
+      - .:/code
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - ./dev.env
+    restart: on-failure
+
+  flower:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery --broker=redis://redis:6379/0 flower --port=5555
+    ports:
+      - "5555:5555"
+    depends_on:
+      - celery
+      - redis
+    env_file:
+      - ./dev.env
+
+
+    
