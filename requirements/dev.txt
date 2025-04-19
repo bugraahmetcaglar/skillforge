@@ -1,0 +1,16 @@
+# Import all base requirements
+-r base.txt
+
+# Code Analysis and Quality Tools
+black==25.1.0  # https://github.com/psf/black
+isort==6.0.1  # https://github.com/PyCQA/isort
+pylint==3.3.6  # https://github.com/PyCQA/pylint
+pylint-django==2.6.1  # https://github.com/PyCQA/pylint-django
+djlint==1.36.4  # https://github.com/Riverside-Healthcare/djLint
+mypy==1.15.0  # https://github.com/python/mypy
+django-stubs==5.1.3  # https://github.com/typeddjango/django-stubs
+djangorestframework-stubs==3.15.3  # https://github.com/typeddjango/djangorestframework-stubs
+
+# Code Formatting and Beautification
+jsbeautifier==1.15.4  # https://github.com/beautify-web/js-beautify
+cssbeautifier==1.15.4  # https://github.com/beautify-web/js-beautify
