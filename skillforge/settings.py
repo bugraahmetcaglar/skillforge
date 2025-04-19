@@ -44,7 +44,18 @@ LOCAL_APPS = [
     "apps.user",
 ]
 
-INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS
+THIRD_PARTY_APPS = [
+    "rest_framework",
+    "rest_framework_simplejwt",
+    "django_filters",
+    "drf_yasg",
+    "corsheaders",
+    "django_celery_beat",
+    "django_celery_results",
+    "django_redis",
+]
+
+INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS + THIRD_PARTY_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
