@@ -20,3 +20,6 @@ numpy==2.2.4  # https://github.com/numpy/numpy
 # Celery
 django-celery-beat==2.7.0
 django-celery-results==2.5.1
+
+# ULID
+python-ulid==3.0.0
