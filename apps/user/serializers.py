@@ -32,6 +32,11 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     pass
 
 
+class UserLoginSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=255, required=True)
+    password = serializers.CharField(max_length=128, required=True, write_only=True)
+
+
 class TokenSerializer(serializers.Serializer):
     access_token = serializers.CharField()
     refresh_token = serializers.CharField()
