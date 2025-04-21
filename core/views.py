@@ -1,10 +1,16 @@
 from __future__ import annotations
 
 import logging
+from typing import Any, Type
 
 from django.conf import settings
-from rest_framework.exceptions import NotFound
-
+from rest_framework.exceptions import (
+    NotFound,
+    ValidationError,
+    PermissionDenied,
+    AuthenticationFailed,
+    MethodNotAllowed,
+)
 from rest_framework import mixins, status
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
@@ -14,24 +20,32 @@ from rest_framework.views import exception_handler as drf_exception_handler
 logger = logging.getLogger(__name__)
 
 
-def custom_exception_handler(exc: Exception, context: dict) -> Response | None:
+def custom_exception_handler(exc: Exception, context: dict[str, Any]):
     """Custom exception handler that masks errors in production for security"""
     response = drf_exception_handler(exc, context)
 
-    if response is not None:
-        # Mask specific errors in production
-        if not settings.DEBUG and isinstance(exc, NotFound):
-            response.data = {"detail": "Invalid request."}
-    else:
-        # Handle non-DRF exceptions
-        if not settings.DEBUG:
-            logger = logging.getLogger(__name__)
-            logger.error(f"Unhandled exception: {exc}", exc_info=True)
+    generic_exceptions: dict[Type[Exception], int] = {
+        NotFound: status.HTTP_404_NOT_FOUND,
+        PermissionDenied: status.HTTP_403_FORBIDDEN,
+        AuthenticationFailed: status.HTTP_401_UNAUTHORIZED,
+        MethodNotAllowed: status.HTTP_405_METHOD_NOT_ALLOWED,
+        ValidationError: status.HTTP_400_BAD_REQUEST,
+    }
 
-            # Return generic error in production
+    if not settings.DEBUG:
+        if response is not None:
+            exc_class = exc.__class__
+
+            if exc_class in generic_exceptions:
+                response.data = {"detail": "Invalid request."}
+        else:
+            # Handle non-DRF exceptions
+            logger = logging.getLogger(__name__)
+            logger.error(f"Exception: {exc}", exc_info=True)
+
             response = Response(
-                {"detail": "An unexpected error occured."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                {"detail": "Invalid request."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
     return response
 
