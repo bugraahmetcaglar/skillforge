@@ -5,8 +5,8 @@ import logging
 from django.conf import settings
 from rest_framework.exceptions import NotFound
 
+from rest_framework import mixins, status
 from rest_framework.generics import GenericAPIView
-from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import exception_handler as drf_exception_handler
 
@@ -37,6 +37,19 @@ def custom_exception_handler(exc: Exception, context: dict) -> Response | None:
 
 
 class BaseAPIView(GenericAPIView):
+    """BaseAPIView: Core foundation for standardized API responses and error handling.
+
+    Features:
+    - Consistent response formatting across all API endpoints
+    - Integrated logging with appropriate severity levels
+    - Environment-aware error handling (detailed in dev, sanitized in production)
+    - OWASP-compliant security measures
+    - Success/error response helpers with standardized structure
+
+    Parent class for specialized views (BaseListAPIView, BaseCreateAPIView, etc.)
+    that follow SOLID principles while maintaining uniform API behavior.
+    """
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger(__name__)
@@ -50,10 +63,10 @@ class BaseAPIView(GenericAPIView):
         response_data = {"success": True}
 
         if message:
-            response_data["message"] = message
+            response_data["message"] = message  # type: ignore
 
         if data is not None:
-            response_data["data"] = None
+            response_data["data"] = None  # type: ignore
 
         return Response(response_data, status=status_code)
 
@@ -69,3 +82,59 @@ class BaseAPIView(GenericAPIView):
             response_data["code"] = error_code
 
         return Response(response_data, status=status_code)
+
+
+class BaseListAPIView(mixins.ListModelMixin, BaseAPIView):
+    """API view for listing model instances"""
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+
+class BaseCreateAPIView(mixins.CreateModelMixin, BaseAPIView):
+    """API view for creating a model instance"""
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+    def create(self, request, *args, **kwargs) -> Response:
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        return self.success_response(
+            status_code=status.HTTP_201_CREATED, message="Resource created successfully"
+        )
+
+
+class BaseRetrieveAPIView(mixins.RetrieveModelMixin, BaseAPIView):
+    """API view for retrieving a model instance"""
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return self.success_response(data=serializer.data)
+
+
+class BaseUpdateAPIView(mixins.UpdateModelMixin, BaseAPIView):
+    """API view for updating a model instance"""
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        return self.success_response(
+            data=serializer.data, message="Resource updated successfully"
+        )
