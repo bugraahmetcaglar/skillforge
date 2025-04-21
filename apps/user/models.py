@@ -1,12 +1,12 @@
-import uuid
-
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from core.fields import ULIDField
+
 
 class User(AbstractUser):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = ULIDField(primary_key=True, editable=False)
     email = models.EmailField(max_length=255, unique=True)
 
     def token(self) -> dict:
