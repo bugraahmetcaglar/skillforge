@@ -18,7 +18,6 @@ router.register("user", UserViewSet, basename="user")
 - /user/ -> list (GET) and create new user (POST)
 - /user/{id}/ -> specific user detail (GET), update (PUT/PATCH), delete (DELETE)
 - /user/register/ -> custom registration endpoint (POST)
-- /user/me/ -> logged-in user operations (GET, PUT, PATCH)
 - /user/regenerate_token/ -> endpoint to regenerate tokens (POST)
 """
 
