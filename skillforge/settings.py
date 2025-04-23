@@ -68,6 +68,11 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+AUTHENTICATION_BACKENDS = [
+    "core.backends.EmailOrUsernameModelBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+
 ROOT_URLCONF = "skillforge.urls"
 
 TEMPLATES = [
@@ -147,11 +152,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=14),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'AUTH_HEADER_TYPES': ('Bearer',),
-    'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=14),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
 }
