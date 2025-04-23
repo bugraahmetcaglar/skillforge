@@ -11,10 +11,12 @@ from apps.user.v1.views import (
     UserRegisterAPIView,
     UserListAPIView,
     UserDetailAPIView,
+    UserLoginAPIView,
 )
 
 urlpatterns = [
     # User operations
+    path("login/", UserLoginAPIView.as_view(), name="v1_user_login"),
     path("register/", UserRegisterAPIView.as_view(), name="v1_user_register"),
     path("list/", UserListAPIView.as_view(), name="v1_user_list"),
     path("<uuid:pk>/", UserDetailAPIView.as_view(), name="v1_user_detail"),
