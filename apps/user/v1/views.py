@@ -49,17 +49,11 @@ class UserLoginAPIView(views.BaseCreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        breakpoint()
         username = serializer.validated_data["username"]
-        email = serializer.validated_data["email"]
         password = serializer.validated_data["password"]
 
-        user = User.objects.filter(Q(username=username) | Q(email=email)).first()
-        if getattr(user, "is_active", False) is False:
-            raise AuthenticationFailed("Invalid credentials.")
-
-        user_auth = authenticate(username=user.username, password=password)
-        if not user_auth:
+        user = authenticate(request=request ,username=username, password=password)
+        if not user:
             raise AuthenticationFailed("Invalid credentials.")
 
         return self.success_response(data=user.token())

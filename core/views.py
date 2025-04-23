@@ -80,7 +80,7 @@ class BaseAPIView(GenericAPIView):
             response_data["message"] = message  # type: ignore
 
         if data is not None:
-            response_data["data"] = None  # type: ignore
+            response_data["data"] = data  # type: ignore
 
         return Response(response_data, status=status_code)
 
