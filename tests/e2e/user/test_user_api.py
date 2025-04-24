@@ -10,14 +10,10 @@ from apps.user.models import User
 @pytest.mark.e2e
 @pytest.mark.api
 class TestUserRegistrationAPI:
-    """
-    E2E tests for the user registration API.
-    """
+    """E2E tests for the user registration API."""
 
     def test_user_can_register(self, api_client, register_user_payload):
-        """
-        Test that a user can register with valid data.
-        """
+        """Test that a user can register with valid data."""
         url = reverse("v1_user_register")
         response = api_client.post(url, register_user_payload, format="json")
 
@@ -35,9 +31,7 @@ class TestUserRegistrationAPI:
         assert user_exists is True
 
     def test_register_with_invalid_data(self, api_client):
-        """
-        Test that registration fails with invalid data.
-        """
+        """Test that registration fails with invalid data."""
         url = reverse("v1_user_register")
 
         # Test with missing fields
@@ -67,9 +61,7 @@ class TestUserRegistrationAPI:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_register_with_existing_username(self, api_client, user):
-        """
-        Test that registration fails with an existing username.
-        """
+        """Test that registration fails with an existing username."""
         url = reverse("v1_user_register")
         duplicate_data = {
             "username": user.username,  # Existing username
@@ -82,9 +74,7 @@ class TestUserRegistrationAPI:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_register_with_existing_email(self, api_client, user):
-        """
-        Test that registration fails with an existing email.
-        """
+        """Test that registration fails with an existing email."""
         url = reverse("v1_user_register")
         duplicate_data = {
             "username": "different_username",
@@ -100,14 +90,10 @@ class TestUserRegistrationAPI:
 @pytest.mark.e2e
 @pytest.mark.api
 class TestUserAuthenticationAPI:
-    """
-    E2E tests for the user authentication API.
-    """
+    """E2E tests for the user authentication API."""
 
     def test_user_can_login(self, api_client, user_with_credentials, user_credentials):
-        """
-        Test that a user can login with valid credentials.
-        """
+        """Test that a user can login with valid credentials."""
         url = reverse("token_obtain_pair")
         response = api_client.post(url, user_credentials, format="json")
 
@@ -116,9 +102,7 @@ class TestUserAuthenticationAPI:
         assert "refresh" in response.data
 
     def test_login_with_invalid_credentials(self, api_client, user_with_credentials):
-        """
-        Test that login fails with invalid credentials.
-        """
+        """Test that login fails with invalid credentials."""
         url = reverse("token_obtain_pair")
 
         # Test with wrong password
@@ -138,9 +122,7 @@ class TestUserAuthenticationAPI:
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     def test_token_refresh(self, api_client, login_user):
-        """
-        Test that a user can refresh their token.
-        """
+        """Test that a user can refresh their token."""
         url = reverse("token_refresh")
         refresh_data = {"refresh": login_user.get("refresh")}
         response = api_client.post(url, refresh_data, format="json")
@@ -149,9 +131,7 @@ class TestUserAuthenticationAPI:
         assert "access" in response.data
 
     def test_token_verify(self, api_client, login_user):
-        """
-        Test that a token can be verified.
-        """
+        """Test that a token can be verified."""
         url = reverse("token_verify")
         token_data = {"token": login_user.get("access")}
         response = api_client.post(url, token_data, format="json")
@@ -165,9 +145,7 @@ class TestUserAPIFlow:
     """E2E tests for the complete user API flow."""
 
     def test_register_login_update_flow(self, api_client, user_flow):
-        """
-        Test the complete user flow: register, login, update profile.
-        """
+        """Test the complete user flow: register, login, update profile."""
         # Register a new user
         user_data = {
             "username": "flowuser",

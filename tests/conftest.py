@@ -76,8 +76,7 @@ def user_factory():
     """
 
     def _user_factory(**kwargs) -> User:
-        """
-        Creates a user with the given attributes.
+        """Creates a user with the given attributes.
 
         Args:
             **kwargs: Attributes to set on the created user
