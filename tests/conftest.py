@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import pytest
 from model_bakery import baker
-from pytest_factoryboy import register
 from rest_framework.test import APIClient
 
 from apps.user.models import User
