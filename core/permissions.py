@@ -1,15 +1,19 @@
 from rest_framework import permissions
 
 from apps.user.models import User
+from rest_framework.request import Request
 
 
 class IsOwnerOrAdmin(permissions.BasePermission):
     """Custom permission to only allow owners of an object or admins."""
 
     def has_object_permission(self, request, view, obj):
-        user: User = request.user  # type: ignore
+        user: User = request.user
 
-        if request.method in permissions.SAFE_METHODS:
-            return user.is_staff or obj == user
+        if user.is_staff:
+            return True
 
-        return False
+        if hasattr(obj, "owner"):
+            return obj.owner == user
+
+        return obj == user
