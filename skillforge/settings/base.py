@@ -15,7 +15,7 @@ import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 # Quick-start development settings - unsuitable for production
@@ -43,6 +43,7 @@ DJANGO_APPS = [
 
 LOCAL_APPS = [
     "apps.user",
+    "apps.contact",
 ]
 
 THIRD_PARTY_APPS = [
@@ -166,4 +167,17 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
     "USER_ID_FIELD": "id",
     "USER_ID_CLAIM": "user_id",
+}
+
+
+# CELERY
+# -------------------------------------
+CELERY_BEAT_SCHEDULE = {
+    'cleanup-inactive-contacts': {
+        'task': 'apps.contact.tasks.cleanup_inactive_contacts',
+        'schedule': timedelta(days=1),
+        'options': {
+            'expires': 3600,
+        },
+    },
 }
