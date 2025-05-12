@@ -26,34 +26,3 @@ class ContactAdmin(admin.ModelAdmin):
         ),
         ("Metadata", {"fields": ("created_at", "last_updated")}),
     )
-
-
-@admin.register(ContactBackup)
-class ContactBackupAdmin(admin.ModelAdmin):
-    list_display = ("first_name", "middle_name", "last_name", "email", "owner", "deactivated_at")
-    list_filter = ("deactivated_at",)
-    search_fields = ("first_name", "middle_name", "last_name", "email")
-    readonly_fields = (
-        "id",
-        "created_at",
-        "last_updated",
-        "deactivated_at",
-    )
-    fieldsets = (
-        (None, {"fields": ("id", "owner", "deactivated_at")}),
-        (
-            "Contact Information",
-            {
-                "fields": (
-                    "first_name",
-                    "middle_name",
-                    "last_name",
-                    "email",
-                    "phone",
-                    "address",
-                    "notes",
-                )
-            },
-        ),
-        ("Metadata", {"fields": ("created_at", "last_updated")}),
-    )
