@@ -1,4 +1,5 @@
 from __future__ import annotations
+import datetime
 
 from django.forms.models import model_to_dict
 from django.db import models
@@ -28,11 +29,11 @@ class Contact(BaseModel):
     email = NullableCharField()
     emails = models.JSONField(default=list, blank=True)
     phones = models.JSONField(default=list, blank=True)
-    mobile_phone = models.CharField(max_length=16)
-    home_phone = models.CharField(max_length=16)
-    work_phone = models.CharField(max_length=16)
-    second_phone = models.CharField(max_length=16)
-    third_phone = models.CharField(max_length=16)
+    mobile_phone = NullableCharField(max_length=16)
+    home_phone = NullableCharField(max_length=16)
+    work_phone = NullableCharField(max_length=16)
+    second_phone = NullableCharField(max_length=16)
+    third_phone = NullableCharField(max_length=16)
     addresses = models.JSONField(
         default=list, blank=True
     )  # List of addresses with labels
@@ -51,7 +52,7 @@ class Contact(BaseModel):
     social_profiles = models.JSONField(default=dict, blank=True)
 
     # Notes
-    notes = models.TextField(blank=True, default="")
+    notes = models.TextField(null=True, blank=True)
 
     # Import metadata: google, outlook, vcard, etc.
     import_source = models.CharField(
