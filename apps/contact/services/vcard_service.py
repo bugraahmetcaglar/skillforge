@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import logging
 import quopri
 from typing import Any
@@ -31,7 +32,6 @@ class VCardImportService:
         imported_count = failed_count = 0
         errors = []
 
-        
         for i, data in enumerate(contacts):
             try:
                 data.update({"owner": user, "import_source": "vcard"})
@@ -39,10 +39,20 @@ class VCardImportService:
                 # Skip completely empty contacts
                 if not any(
                     data.get(f)
-                    for f in ["first_name", "last_name", "email", "mobile_phone"]
+                    for f in [
+                        "first_name",
+                        "last_name",
+                        "full_name",
+                        "email",
+                        "mobile_phone",
+                    ]
                 ):
                     failed_count += 1
                     continue
+
+                # Generate external_id from full name or name parts
+                external_id = self._generate_external_id(data)
+                data["external_id"] = external_id
 
                 Contact.objects.create(**data)
                 imported_count += 1
@@ -57,6 +67,28 @@ class VCardImportService:
             "total_processed": len(contacts),
             "errors": errors,
         }
+
+    def _generate_external_id(self, contact_data: dict) -> str:
+        """Generate unique external_id from contact name using MD5 hash"""
+        # Use full_name if available, otherwise combine first + last name
+        full_name = contact_data.get("full_name")
+        if not full_name:
+            first = contact_data.get("first_name", "")
+            last = contact_data.get("last_name", "")
+            full_name = f"{first} {last}".strip()
+
+        # If still no name, use email or phone as fallback
+        if not full_name:
+            full_name = (
+                contact_data.get("email")
+                or contact_data.get("mobile_phone")
+                or "unknown"
+            )
+
+        # Normalize and hash
+        normalized_name = full_name.lower().strip()
+        hash_object = hashlib.md5(normalized_name.encode("utf-8"))
+        return f"vcard_{hash_object.hexdigest()}"
 
 
 class VCardParser:
@@ -211,16 +243,21 @@ class VCardParser:
 
                 if field == "FN":
                     data["full_name"] = self._decode_manual(value)
+
                 elif field == "N":
                     parts = value.split(";")
                     if len(parts) >= 2:
                         data["last_name"] = self._decode_manual(parts[0])
                         data["first_name"] = self._decode_manual(parts[1])
+
                 elif field == "TEL" and not data.get("mobile_phone"):
                     data["mobile_phone"] = self._normalize_phone(value.strip())
+
                 elif field == "EMAIL" and not data.get("email"):
                     data["email"] = value.strip().lower()
-            except:
+
+            except Exception as err:
+                logger.warning(f"Failed to parse line '{line}': {err}")
                 continue
 
         return data if data else None
