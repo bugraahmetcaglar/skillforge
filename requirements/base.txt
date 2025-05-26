@@ -28,7 +28,7 @@ python-ulid==3.0.0
 # ------------------------------------------------------------------------------
 pytest==8.3.5  # https://docs.pytest.org/en/stable/
 pytest-django==4.7.0  # https://github.com/pytest-dev/pytest-django
-pytest-sugar==0.9.5  # https://github.com/Frozenball/pytest-sugar
+pytest-sugar==1.0.0  # https://github.com/Frozenball/pytest-sugar
 
 # Coverage
 # ------------------------------------------------------------------------------
@@ -40,3 +40,6 @@ django-coverage-plugin==2.0.3  # https://github.com/nedbat/django_coverage_plugi
 # Mock
 # ------------------------------------------------------------------------------
 requests-mock==1.11.0  # https://github.com/jamielennox/requests-mock
+
+# vCard Processing
+vobject==0.9.8  # https://github.com/py-vobject/vobject - vCard/iCalendar parsing
