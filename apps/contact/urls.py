@@ -1,7 +1,7 @@
 from django.urls import path
 
-from apps.contact.views import ContactImportAPIView
+from apps.contact.views import VCardImportAPIView
 
 urlpatterns = [
-    path("import/vcard/", ContactImportAPIView.as_view(), name="token_obtain_pair"),
+    path("import/vcard/", VCardImportAPIView.as_view(), name="vcard_import_api_view"),
 ]
