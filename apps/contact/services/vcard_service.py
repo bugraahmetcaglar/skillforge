@@ -271,32 +271,78 @@ class VCardParser:
         return value
 
     def _normalize_phone(self, phone: str) -> str:
-        """Normalize phone number to +90XXXXXXXXXX format"""
+        """Normalize phone number to international format
+        
+        Handles various phone number formats:
+        - US: +1-804-200-3448 -> +18042003448
+        - Turkey: +90-532-123-4567 -> +905321234567
+        - Local formats: 05321234567 -> +905321234567
+        
+        Args:
+            phone: Raw phone number string
+            
+        Returns:
+            str: Normalized phone number in international format
+        """
         if not phone:
             return ""
 
-        # Remove all non-digits
-        digits = "".join(c for c in phone if c.isdigit())
+        # Remove all non-digits and preserve + at the beginning
+        cleaned = ""
+        for i, char in enumerate(phone):
+            if char.isdigit():
+                cleaned += char
+            elif char == "+" and i == 0:
+                cleaned += char
 
-        if not digits:
-            return phone  # Return original if no digits found
+        if not cleaned or cleaned == "+":
+            return phone  # Return original if no meaningful digits found
 
-        # Turkish phone number patterns
-        if digits.startswith("90") and len(digits) == 12:
-            # Already correct: 905323543683
-            return f"+{digits}"
-        elif digits.startswith("5") and len(digits) == 10:
-            # Missing country code: 5323543683
-            return f"+90{digits}"
-        elif digits.startswith("05") and len(digits) == 11:
-            # Leading zero: 05323543683
-            return f"+90{digits[1:]}"
-        elif len(digits) == 10 and digits[0] in "5":
-            # Mobile without prefix: 5323543683
-            return f"+90{digits}"
-        elif len(digits) == 11 and digits.startswith("05"):
-            # 05323543683 format
-            return f"+90{digits[1:]}"
+        # Handle international format (starts with +)
+        if cleaned.startswith("+"):
+            digits = cleaned[1:]  # Remove + for processing
+            
+            # US numbers: +1XXXXXXXXXX (11 digits total)
+            if digits.startswith("1") and len(digits) == 11:
+                return f"+{digits}"
+                
+            # Turkish numbers: +90XXXXXXXXXX (12 digits total) 
+            elif digits.startswith("90") and len(digits) == 12:
+                return f"+{digits}"
+                
+            # Other international formats - keep as is
+            else:
+                return f"+{digits}"
+        
+        # Handle non-international formats
         else:
-            # International or other format - keep as is but add + if missing
-            return f"+{digits}" if not phone.startswith("+") else phone
+            digits = cleaned
+            
+            # Turkish mobile patterns
+            if digits.startswith("90") and len(digits) == 12:
+                # Already correct format without +: 905323543683
+                return f"+{digits}"
+            elif digits.startswith("5") and len(digits) == 10:
+                # Missing country code: 5323543683
+                return f"+90{digits}"
+            elif digits.startswith("05") and len(digits) == 11:
+                # Leading zero: 05323543683
+                return f"+90{digits[1:]}"
+            elif len(digits) == 10 and digits[0] in "5":
+                # Mobile without prefix: 5323543683
+                return f"+90{digits}"
+            elif len(digits) == 11 and digits.startswith("05"):
+                # 05323543683 format
+                return f"+90{digits[1:]}"
+                
+            # US numbers without country code
+            elif len(digits) == 10:
+                # Assume US number: 8042003448 -> +18042003448
+                return f"+1{digits}"
+            elif len(digits) == 11 and digits.startswith("1"):
+                # US with country code: 18042003448 -> +18042003448
+                return f"+{digits}"
+                
+            # Default: add + if not present
+            else:
+                return f"+{digits}" if digits else phone
