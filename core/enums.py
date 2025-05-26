@@ -16,6 +16,7 @@ class SourceTextChoices(models.TextChoices):
     INSTAGRAM = "instagram", "Instagram"
     TWITTER = "twitter", "Twitter"
     SAMSUNG = "samsung", "Samsung"
+    VCARD = "vcard", "vCard"
 
 
 class ContactSource(Enum):
