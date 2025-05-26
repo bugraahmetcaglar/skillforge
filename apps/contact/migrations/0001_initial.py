@@ -148,7 +148,6 @@ class Migration(migrations.Migration):
                             ("instagram", "Instagram"),
                             ("twitter", "Twitter"),
                             ("samsung", "Samsung"),
-                            ("vcard", "vCard"),
                         ],
                         default="manual",
                         max_length=50,
