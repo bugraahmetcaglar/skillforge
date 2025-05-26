@@ -1,6 +1,5 @@
 import logging
 
-import logging
 from rest_framework import status, permissions
 from rest_framework.parsers import MultiPartParser
 from rest_framework.request import Request
