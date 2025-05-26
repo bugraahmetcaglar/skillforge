@@ -1,5 +1,3 @@
-version: '3.7'
-
 volumes:
   postgres_data: {}
   local_bitnami_redis_data: {}
