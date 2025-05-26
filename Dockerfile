@@ -1,6 +1,6 @@
 ARG PYTHON_VERSION=3.13
-FROM python:${PYTHON_VERSION} as python
-FROM python as builder
+FROM python:${PYTHON_VERSION} AS python
+FROM python AS builder
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
     build-essential \
@@ -12,7 +12,7 @@ COPY ./requirements /requirements
 RUN pip wheel --wheel-dir /usr/src/app/wheels  \
     -r "/requirements/${BUILD_ENVIRONMENT}.txt"
 
-FROM python as runner
+FROM python AS runner
 
 ARG APP_HOME=/code
 WORKDIR ${APP_HOME}
