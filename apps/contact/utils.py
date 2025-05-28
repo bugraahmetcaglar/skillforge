@@ -1,8 +1,6 @@
 import hashlib
 import re
 
-from core.enums import SourceEnum
-
 
 def normalize_phone_number(phone: str) -> str:
     """Normalize Turkish phone numbers to +90XXXXXXXXXX format
