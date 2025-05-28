@@ -2,6 +2,26 @@
 DJANGO_SETTINGS_MODULE = "skillforge.settings.test"
 testpaths = ["tests"]
 python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = [
+    "--strict-markers",
+    "-v",
+    "--no-header",
+    "--no-migrations",
+    "--django-db-setup",
+]
+markers = [
+    "unit: Unit tests that test small, isolated components",
+    "integration: Tests that cover interaction between different components",
+    "e2e: End-to-end tests that test the full application",
+    "slow: Tests that are particularly slow to run",
+    "model: Tests for Django models",
+    "view: Tests for Django views",
+    "serializer: Tests for DRF serializers",
+    "api: Tests for API endpoints",
+    "current: Currently working on tests",
+]
 
 [tool.mypy]
 python_version = "3.13"
@@ -21,3 +41,6 @@ ignore_errors = true
 [build-system]
 requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 119
