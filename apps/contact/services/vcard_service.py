@@ -1,14 +1,16 @@
 from __future__ import annotations
 
-import hashlib
 import logging
 import quopri
-from typing import Any
 
+from typing import Any
 from vobject.base import readOne as vobject_readOne
 
 from apps.contact.models import Contact
+from apps.contact.utils import generate_external_id, normalize_phone_number
 from apps.user.models import User
+from core.enums import SourceEnum
+from core.utils import recursive_getattr
 
 logger = logging.getLogger(__name__)
 
@@ -16,50 +18,48 @@ logger = logging.getLogger(__name__)
 class VCardImportService:
     """Service for importing vCard files"""
 
-    def import_from_file(self, vcard_file: Any, user: User) -> dict[str, Any]:
+    def __init__(self, user: Any):
+        if user and isinstance(user, User):
+            self.user = user
+        else:
+            self.user = None
+
+    def import_from_file(self, vcard_file: Any) -> dict[str, Any]:
         try:
             content = vcard_file.read().decode("utf-8")
             parser = VCardParser()
             contacts = parser.parse(content)
-            return self._save_contacts(contacts, user)
+            return self._save_contacts(contacts)
         except UnicodeDecodeError:
             raise ValueError("Invalid file encoding")
         except Exception as e:
             logger.error(f"Import error: {e}")
             raise ValueError(f"Import failed: {e}")
 
-    def _save_contacts(self, contacts: list[dict], user: User) -> dict[str, Any]:
+    def _save_contacts(self, contacts: list[dict]) -> dict[str, Any]:
         imported_count = failed_count = 0
         errors = []
 
         for i, data in enumerate(contacts):
             try:
-                data.update({"owner": user, "import_source": "vcard"})
+                data.update({"owner": self.user, "import_source": "vcard"})
 
                 # Skip completely empty contacts
-                if not any(
-                    data.get(f)
-                    for f in [
-                        "first_name",
-                        "last_name",
-                        "full_name",
-                        "email",
-                        "mobile_phone",
-                    ]
-                ):
+                if not any(data.get(f) for f in ["first_name", "last_name", "full_name", "email", "mobile_phone"]):
                     failed_count += 1
                     continue
 
                 # Generate external_id from full name or name parts
-                external_id = self._generate_external_id(data)
-                data["external_id"] = external_id
+                data["external_id"] = generate_external_id(
+                    data=f"{data.get("mobile_phone")}", source=SourceEnum.VCARD.value
+                )
 
                 Contact.objects.create(**data)
-                imported_count += 1
 
-            except Exception as e:
+            except Exception as err:
+                logger.exception(f"Failed to save contact {i+1}: {err}")
                 failed_count += 1
-                errors.append(f"Contact {i+1}: {e}")
+                errors.append(f"Contact {i+1}: {err}")
 
         return {
             "imported_count": imported_count,
@@ -67,28 +67,6 @@ class VCardImportService:
             "total_processed": len(contacts),
             "errors": errors,
         }
-
-    def _generate_external_id(self, contact_data: dict) -> str:
-        """Generate unique external_id from contact name using MD5 hash"""
-        # Use full_name if available, otherwise combine first + last name
-        full_name = contact_data.get("full_name")
-        if not full_name:
-            first = contact_data.get("first_name", "")
-            last = contact_data.get("last_name", "")
-            full_name = f"{first} {last}".strip()
-
-        # If still no name, use email or phone as fallback
-        if not full_name:
-            full_name = (
-                contact_data.get("email")
-                or contact_data.get("mobile_phone")
-                or "unknown"
-            )
-
-        # Normalize and hash
-        normalized_name = full_name.lower().strip()
-        hash_object = hashlib.md5(normalized_name.encode("utf-8"))
-        return f"vcard_{hash_object.hexdigest()}"
 
 
 class VCardParser:
@@ -100,13 +78,11 @@ class VCardParser:
 
         for block in blocks:
             try:
-                # Try vobject first
                 vcard = vobject_readOne(block)
                 contact = self._extract_data(vcard)
                 if contact:
                     contacts.append(contact)
             except Exception:
-                # Fallback to manual parsing
                 contact = self._parse_manual(block)
                 if contact:
                     contacts.append(contact)
@@ -133,33 +109,54 @@ class VCardParser:
     def _extract_data(self, vcard: Any) -> dict:
         data = {}
 
-        # Names
-        if hasattr(vcard, "fn"):
-            data["full_name"] = self._decode_value(vcard.fn)
+        self.extract_full_name(vcard=vcard)
+        data = self.extract_name(vcard=vcard, data=data)
+        data = self.extract_phone_numbers(vcard=vcard, data=data)
+        data = self._extract_email(vcard=vcard, data=data)
 
+        # Other fields
+        for field, attr in [("organization", "org"), ("job_title", "title"), ("notes", "note")]:
+            if hasattr(vcard, attr):
+                value = self._decode_value(getattr(vcard, attr))
+                if value:
+                    data[field] = value
+
+        data["birthday"] = recursive_getattr(vcard, "bday.value")
+
+        return data
+
+    def extract_full_name(self, vcard: Any) -> str:
+        """Extract full name from vCard"""
+        if hasattr(vcard, "fn"):
+            return self._decode_value(vcard.fn)
+        return ""
+
+    def extract_name(self, vcard: Any, data: dict) -> dict:
+        """Extract first and last name from vCard"""
         if hasattr(vcard, "n"):
             try:
-                n = vcard.n.value
-                data["first_name"] = getattr(n, "given", "") or ""
-                data["last_name"] = getattr(n, "family", "") or ""
-                data["middle_name"] = getattr(n, "additional", "") or ""
-            except:
-                pass
+                name = vcard.n.value
+                data["first_name"] = getattr(name, "given", "") or ""
+                data["last_name"] = getattr(name, "family", "") or ""
+                data["middle_name"] = getattr(name, "additional", "") or ""
+            except Exception as err:
+                logger.exception(f"Failed to extract name: {err}")
 
-        # Fallback: split full name
         if not data.get("first_name") and data.get("full_name"):
             parts = data["full_name"].split(" ", 1)
             data["first_name"] = parts[0]
             if len(parts) > 1:
                 data["last_name"] = parts[1]
+        return data
 
-        # Phones
+    def extract_phone_numbers(self, vcard: Any, data: dict) -> dict:
         phones = []
         if hasattr(vcard, "tel"):
             tels = vcard.tel if isinstance(vcard.tel, list) else [vcard.tel]
             for tel in tels:
                 try:
-                    number = self._normalize_phone(tel.value.strip())
+                    # Use core utility for phone normalization
+                    number = normalize_phone_number(tel.value.strip())
                     if number:
                         phone_type = self._get_type(tel)
                         phones.append({"number": number, "type": phone_type})
@@ -167,52 +164,28 @@ class VCardParser:
                         # Set primary phone
                         if not data.get("mobile_phone"):
                             data["mobile_phone"] = number
-                except:
+                except Exception as err:
+                    logger.exception(f"Failed to extract phone number: {err}, 'tel': {tel}")
                     continue
+        return data
 
-        data["phones"] = phones
-
-        # Email
+    def _extract_email(self, vcard: Any, data: dict) -> dict:
         if hasattr(vcard, "email"):
             try:
-                email = (
-                    vcard.email.value
-                    if not isinstance(vcard.email, list)
-                    else vcard.email[0].value
-                )
+                email = recursive_getattr(vcard, "email.value") or recursive_getattr(vcard, "email[0].value")
                 data["email"] = email.strip().lower()
-            except:
-                pass
-
-        # Other fields
-        for field, attr in [
-            ("organization", "org"),
-            ("job_title", "title"),
-            ("notes", "note"),
-        ]:
-            if hasattr(vcard, attr):
-                value = self._decode_value(getattr(vcard, attr))
-                if value:
-                    data[field] = value
-
-        # Birthday
-        if hasattr(vcard, "bday"):
-            try:
-                data["birthday"] = vcard.bday.value
-            except:
-                pass
-
+            except Exception as err:
+                logger.exception(f"Failed to extract email: {err}, 'email': {vcard.email}")
         return data
 
     def _decode_value(self, field: Any) -> str:
         try:
             value = field.value
-            if hasattr(field, "encoding_param") and "QUOTED-PRINTABLE" in (
-                field.encoding_param or []
-            ):
+            if hasattr(field, "encoding_param") and "QUOTED-PRINTABLE" in (field.encoding_param or []):
                 value = quopri.decodestring(value.encode()).decode("utf-8")
             return value.strip() if value else ""
-        except:
+        except Exception as err:
+            logger.exception(f"Failed to decode field value: {err}, 'field': {field}")
             return str(getattr(field, "value", ""))
 
     def _get_type(self, field: Any) -> str:
@@ -225,7 +198,8 @@ class VCardParser:
                             return t
                     return types[0].upper()
                 return types.upper()
-        except:
+        except Exception as err:
+            logger.exception(f"Failed to get type from field: {err}, 'field': {field}")
             pass
         return "OTHER"
 
@@ -251,7 +225,8 @@ class VCardParser:
                         data["first_name"] = self._decode_manual(parts[1])
 
                 elif field == "TEL" and not data.get("mobile_phone"):
-                    data["mobile_phone"] = self._normalize_phone(value.strip())
+                    # Use utility function for phone normalization
+                    data["mobile_phone"] = normalize_phone_number(value.strip())
 
                 elif field == "EMAIL" and not data.get("email"):
                     data["email"] = value.strip().lower()
@@ -266,37 +241,7 @@ class VCardParser:
         try:
             if "=" in value:
                 return quopri.decodestring(value.encode()).decode("utf-8")
-        except:
+        except Exception as err:
+            logger.exception(f"Failed to decode manual value: {err}, 'value': {value}")
             pass
         return value
-
-    def _normalize_phone(self, phone: str) -> str:
-        """Normalize phone number to +90XXXXXXXXXX format"""
-        if not phone:
-            return ""
-
-        # Remove all non-digits
-        digits = "".join(c for c in phone if c.isdigit())
-
-        if not digits:
-            return phone  # Return original if no digits found
-
-        # Turkish phone number patterns
-        if digits.startswith("90") and len(digits) == 12:
-            # Already correct: 905323543683
-            return f"+{digits}"
-        elif digits.startswith("5") and len(digits) == 10:
-            # Missing country code: 5323543683
-            return f"+90{digits}"
-        elif digits.startswith("05") and len(digits) == 11:
-            # Leading zero: 05323543683
-            return f"+90{digits[1:]}"
-        elif len(digits) == 10 and digits[0] in "5":
-            # Mobile without prefix: 5323543683
-            return f"+90{digits}"
-        elif len(digits) == 11 and digits.startswith("05"):
-            # 05323543683 format
-            return f"+90{digits[1:]}"
-        else:
-            # International or other format - keep as is but add + if missing
-            return f"+{digits}" if not phone.startswith("+") else phone

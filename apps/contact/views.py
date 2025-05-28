@@ -23,10 +23,8 @@ class VCardImportAPIView(BaseAPIView):
         serializer.is_valid(raise_exception=True)
 
         try:
-            service = VCardImportService()
-            results = service.import_from_file(
-                serializer.validated_data["vcard_file"], request.user
-            )
+            service = VCardImportService(user=request.user)
+            results = service.import_from_file(serializer.validated_data["vcard_file"])
 
             return self.success_response(
                 data=results,
@@ -37,6 +35,4 @@ class VCardImportAPIView(BaseAPIView):
             return self.error_response(str(e), status_code=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             logger.error(f"Import error: {e}")
-            return self.error_response(
-                "Import failed", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return self.error_response("Import failed", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
