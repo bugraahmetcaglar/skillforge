@@ -1,6 +1,5 @@
 from django.contrib import admin
-from django.http.request import HttpRequest
-from apps.contact.models import Contact, ContactBackup
+from apps.contact.models import Contact
 
 
 @admin.register(Contact)
