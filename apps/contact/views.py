@@ -6,9 +6,11 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from apps.contact.serializers import VCardImportSerializer
+from apps.contact.models import Contact
+from apps.contact.serializers import VCardImportSerializer, ContactSerializer
 from apps.contact.services.vcard_service import VCardImportService
-from core.views import BaseAPIView
+from core.permissions import IsOwnerOrAdmin
+from core.views import BaseAPIView, BaseListAPIView
 
 logger = logging.getLogger(__name__)
 
@@ -36,3 +38,9 @@ class VCardImportAPIView(BaseAPIView):
         except Exception as e:
             logger.error(f"Import error: {e}")
             return self.error_response("Import failed", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ContactListAPIView(BaseListAPIView):
+    serializer_class = ContactSerializer
+    permission_classes = [IsOwnerOrAdmin]
+    queryset = Contact.objects.filter(is_active=True)

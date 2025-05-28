@@ -1,19 +1,27 @@
+import logging
+
 from rest_framework import permissions
 
 from apps.user.models import User
 from rest_framework.request import Request
 
 
+logger = logging.getLogger(__name__)
+
 class IsOwnerOrAdmin(permissions.BasePermission):
     """Custom permission to only allow owners of an object or admins."""
 
     def has_object_permission(self, request, view, obj):
-        user: User = request.user
+        try:
+            user: User = request.user
 
-        if user.is_staff:
-            return True
+            if user.is_staff:
+                return True
 
-        if hasattr(obj, "owner"):
-            return obj.owner == user
+            if hasattr(obj, "owner"):
+                return obj.owner == user
 
-        return obj == user
+            return obj == user
+        except Exception as err:
+            logger.exception(f"Permission check failed: {err}")
+            return False
