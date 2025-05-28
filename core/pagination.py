@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from typing import Any, Dict
+from typing import Any
 
 
 class CustomPageNumberPagination(PageNumberPagination):

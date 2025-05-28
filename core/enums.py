@@ -19,21 +19,7 @@ class SourceTextChoices(models.TextChoices):
     VCARD = "vcard", "vCard"
 
 
-class ContactSource(Enum):
-    Google = SourceTextChoices.GOOGLE.value
-    Outlook = SourceTextChoices.OUTLOOK.value
-    Sim = SourceTextChoices.SIM.value
-    ICloud = SourceTextChoices.ICLOUD.value
-    Csv = SourceTextChoices.CSV.value
-    Manual = SourceTextChoices.MANUAL.value
-    WhatsApp = SourceTextChoices.WHATSAPP.value
-    Telegram = SourceTextChoices.TELEGRAM.value
-    LinkedIn = SourceTextChoices.LINKEDIN.value
-    Facebook = SourceTextChoices.FACEBOOK.value
-    Instagram = SourceTextChoices.INSTAGRAM.value
-    Twitter = SourceTextChoices.TWITTER.value
-
-
+# TODO: Celery task implementation
 class ImportStatus(models.TextChoices):
     """Status choices for import tasks"""
 
@@ -41,3 +27,10 @@ class ImportStatus(models.TextChoices):
     PROCESSING = "processing", "Processing"
     COMPLETED = "completed", "Completed"
     FAILED = "failed", "Failed"
+
+
+class SourceEnum(Enum):
+    VCARD = "vcard"
+
+    def __str__(self) -> str:
+        return self.value

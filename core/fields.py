@@ -1,5 +1,6 @@
-from django.db import models
 import ulid
+
+from django.db import models
 
 
 class NullableCharField(models.CharField):
@@ -19,18 +20,18 @@ class ULIDField(models.CharField):
         kwargs["max_length"] = 26
         kwargs["unique"] = kwargs.get("unique", True)
         super().__init__(*args, **kwargs)
-    
+
     def pre_save(self, model_instance, add):
         value = getattr(model_instance, self.attname, None)
         if value is None or value == "":
             value = ulid.ULID()
             setattr(model_instance, self.attname, value)
         return value
-    
+
     def to_python(self, value):
         if isinstance(value, str) or value is None:
             return value
         return str(value)
-    
+
     def from_db_value(self, value, expression, connection):
         return self.to_python(value)

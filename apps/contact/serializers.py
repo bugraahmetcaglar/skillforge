@@ -1,25 +1,17 @@
 from __future__ import annotations
-from typing import Any
 
+from typing import Any
 from rest_framework import serializers
 
 
 class VCardImportSerializer(serializers.Serializer):
-    """Serializer for vCard file import operations
-    Validates uploaded vCard files
-    """
-
-    vcard_file = serializers.FileField(
-        help_text="vCard file (.vcf or .vcard)", allow_empty_file=False
-    )
+    vcard_file = serializers.FileField(help_text="vCard file (.vcf or .vcard)", allow_empty_file=False)
 
     def validate_vcard_file(self, value) -> Any:
         """Validate uploaded vCard file"""
 
         if not value.name.lower().endswith((".vcf", ".vcard")):
-            raise serializers.ValidationError(
-                "Invalid file format. Please upload a .vcf or .vcard file."
-            )
+            raise serializers.ValidationError("Invalid file format. Please upload a .vcf or .vcard file.")
 
         # Check file size (max 5MB)
         if value.size > 5 * 1024 * 1024:
@@ -40,19 +32,13 @@ class VCardImportSerializer(serializers.Serializer):
 
             content_stripped = content.strip()
             if not content_stripped.startswith("BEGIN:VCARD"):
-                raise serializers.ValidationError(
-                    "Invalid vCard format. File must start with 'BEGIN:VCARD'."
-                )
+                raise serializers.ValidationError("Invalid vCard format. File must start with 'BEGIN:VCARD'.")
 
             if not content_stripped.endswith("END:VCARD"):
-                raise serializers.ValidationError(
-                    "Invalid vCard format. File must end with 'END:VCARD'."
-                )
+                raise serializers.ValidationError("Invalid vCard format. File must end with 'END:VCARD'.")
 
         except UnicodeDecodeError:
-            raise serializers.ValidationError(
-                "Invalid file encoding. File must be UTF-8 encoded."
-            )
+            raise serializers.ValidationError("Invalid file encoding. File must be UTF-8 encoded.")
         except Exception as e:
             raise serializers.ValidationError(f"Error reading file: {str(e)}")
         return value

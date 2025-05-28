@@ -1,10 +1,9 @@
 from __future__ import annotations
-import datetime
 
 from django.forms.models import model_to_dict
 from django.db import models
 from django.db.models import Q
-from django.utils import timezone
+from django.utils import timezone as django_timezone
 
 from core.enums import SourceTextChoices
 from core.fields import NullableCharField
@@ -34,9 +33,7 @@ class Contact(BaseModel):
     work_phone = NullableCharField(max_length=16)
     second_phone = NullableCharField(max_length=16)
     third_phone = NullableCharField(max_length=16)
-    addresses = models.JSONField(
-        default=list, blank=True
-    )  # List of addresses with labels
+    addresses = models.JSONField(default=list, blank=True)  # List of addresses with labels
 
     # Company information
     organization = NullableCharField()
@@ -73,20 +70,16 @@ class Contact(BaseModel):
     deactivated_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
-        indexes = [
-            models.Index(fields=["owner", "full_name"]),
-            models.Index(fields=["import_source"]),
-        ]
         unique_together = [["owner", "external_id", "import_source"]]
         ordering = ["first_name", "last_name"]
 
     def __str__(self) -> str:
         return f"{self.first_name} {self.last_name}".strip() or "Unnamed Contact"
 
-    def deactivate(self) -> None:
+    def delete(self) -> None:
         """Soft-delete the contact by marking it as inactive and recording the deactivation time."""
         self.is_active = False
-        self.deactivated_at = timezone.now()
+        self.deactivated_at = django_timezone.now()
         self.save(update_fields=["is_active", "deactivated_at", "last_updated"])
 
         # Create a backup copy
@@ -97,53 +90,51 @@ class Contact(BaseModel):
         )
 
     @classmethod
-    def search(cls, owner: User, query: str) -> models.QuerySet:
-        """Search contacts by name, email, phone, etc."""
+    def search(cls, owner: User, keyword: str) -> models.QuerySet:
         return cls.objects.filter(
             owner=owner,
             is_active=True,
         ).filter(
-            Q(first_name__icontains=query)
-            | Q(last_name__icontains=query)
-            | Q(email__icontains=query)
-            | Q(mobile_phone__icontains=query)
-            | Q(organization__icontains=query)
-            | Q(job_title__icontains=query)
+            Q(first_name__icontains=keyword)
+            | Q(last_name__icontains=keyword)
+            | Q(email__icontains=keyword)
+            | Q(mobile_phone__icontains=keyword)
         )
 
 
 class ContactBackup(BaseModel):
     """Backup model for storing deleted contacts."""
 
+    contact = models.ForeignKey(
+        Contact,
+        on_delete=models.SET_NULL,
+        related_name="backups",
+        db_constraint=False,
+        null=True,
+        blank=True,
+    )
     owner = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="contact_backups"
+        User,
+        on_delete=models.CASCADE,
+        related_name="contact_backups",
     )
     contact_data = models.JSONField(default=list, blank=True)
+    is_active = models.BooleanField(default=True)
 
     class Meta:
         ordering = ["-created_at"]
 
-    def delete(self):
+    def delete(self) -> bool:
         self.is_active = False
         self.save(update_fields=["is_active", "last_updated"])
+        return True
 
     def restore(self) -> Contact:
         """Restore the contact from backup."""
-        data = self.contact_data.copy()
+        self.contact.is_active = True
+        self.contact.save(update_fields=["is_active", "last_updated"])
 
-        # Extract fields that need special handling
-        birthday = data.pop("birthday", None)
-        if birthday:
-            data["birthday"] = timezone.datetime.fromisoformat(birthday).date()
+        # Mark the backup as inactive
+        self.delete()
 
-        anniversary = data.pop("anniversary", None)
-        if anniversary:
-            data["anniversary"] = timezone.datetime.fromisoformat(anniversary).date()
-
-        # Remove timestamp fields
-        data.pop("imported_at", None)
-        data.pop("deactivated_at", None)
-
-        # Create new contact
-        contact = Contact.objects.create(owner=self.owner, **data)
-        return contact
+        return self.contact
