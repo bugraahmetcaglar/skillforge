@@ -8,6 +8,7 @@ from rest_framework.request import Request
 
 logger = logging.getLogger(__name__)
 
+
 class IsOwnerOrAdmin(permissions.BasePermission):
     """Custom permission to only allow owners of an object or admins."""
 
