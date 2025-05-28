@@ -1,9 +1,7 @@
 from __future__ import annotations
+
 from typing import Any
-
 from rest_framework import serializers
-
-from apps.contact.models import Contact
 
 
 class VCardImportSerializer(serializers.Serializer):
@@ -44,10 +42,3 @@ class VCardImportSerializer(serializers.Serializer):
         except Exception as e:
             raise serializers.ValidationError(f"Error reading file: {str(e)}")
         return value
-
-
-class ContactSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Contact
-        exclude = ("id",)
