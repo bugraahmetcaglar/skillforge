@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class IsOwnerOrAdmin(permissions.BasePermission):
     """Custom permission to only allow owners of an object or admins."""
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request: Request, view, obj):
         try:
             user: User = request.user
 
