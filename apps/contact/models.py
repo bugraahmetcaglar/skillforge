@@ -1,5 +1,4 @@
 from __future__ import annotations
-import datetime
 
 from django.forms.models import model_to_dict
 from django.db import models
