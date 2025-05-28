@@ -1,14 +1,15 @@
 import logging
 
-import logging
 from rest_framework import status, permissions
 from rest_framework.parsers import MultiPartParser
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from apps.contact.serializers import VCardImportSerializer
+from apps.contact.models import Contact
+from apps.contact.serializers import VCardImportSerializer, ContactSerializer
 from apps.contact.services.vcard_service import VCardImportService
-from core.views import BaseAPIView
+from core.permissions import IsOwnerOrAdmin
+from core.views import BaseAPIView, BaseListAPIView
 
 logger = logging.getLogger(__name__)
 
@@ -23,10 +24,8 @@ class VCardImportAPIView(BaseAPIView):
         serializer.is_valid(raise_exception=True)
 
         try:
-            service = VCardImportService()
-            results = service.import_from_file(
-                serializer.validated_data["vcard_file"], request.user
-            )
+            service = VCardImportService(user=request.user)
+            results = service.import_from_file(serializer.validated_data["vcard_file"])
 
             return self.success_response(
                 data=results,
@@ -37,6 +36,4 @@ class VCardImportAPIView(BaseAPIView):
             return self.error_response(str(e), status_code=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             logger.error(f"Import error: {e}")
-            return self.error_response(
-                "Import failed", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return self.error_response("Import failed", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -101,24 +101,24 @@ class BaseAPIView(GenericAPIView):
 class BaseListAPIView(mixins.ListModelMixin, BaseAPIView):
     def get(self, request, *args, **kwargs):
         """Handle GET requests with pagination and standardized response.
-        
+
         If pagination is configured, returns a paginated response.
         Otherwise, returns a standard success_response.
-        
+
         Args:
             request: The HTTP request
-            
+
         Returns:
             Response: A standardized response with list data
         """
         queryset = self.filter_queryset(self.get_queryset())
-        
+
         # Check if pagination is enabled and used
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
-        
+
         serializer = self.get_serializer(queryset, many=True)
         return self.success_response(data=serializer.data)
 
@@ -134,9 +134,7 @@ class BaseCreateAPIView(mixins.CreateModelMixin, BaseAPIView):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
 
-        return self.success_response(
-            status_code=status.HTTP_201_CREATED, message="Resource created successfully"
-        )
+        return self.success_response(status_code=status.HTTP_201_CREATED, message="Resource created successfully")
 
 
 class BaseRetrieveAPIView(mixins.RetrieveModelMixin, BaseAPIView):
@@ -167,6 +165,4 @@ class BaseUpdateAPIView(mixins.UpdateModelMixin, BaseAPIView):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
-        return self.success_response(
-            data=serializer.data, message="Resource updated successfully"
-        )
+        return self.success_response(data=serializer.data, message="Resource updated successfully")
