@@ -1,0 +1,23 @@
+# Frontend build stage for Tailwind CSS
+FROM node:20-alpine as frontend-builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy source files
+COPY tailwind.config.js ./
+COPY postcss.config.js ./
+COPY static/src/ ./static/src/
+COPY templates/ ./templates/
+
+# Build CSS
+RUN npm run build-css-prod
+
+# Production stage - copy built assets
+FROM alpine:latest as assets
+COPY --from=frontend-builder /app/static/admin/css/ /static/admin/css/
