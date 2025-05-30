@@ -1,0 +1,13 @@
+{
+  "name": "skillforge-admin",
+  "version": "1.0.0",
+  "scripts": {
+    "build-css": "tailwindcss -i ./static/src/admin.css -o ./static/admin/css/admin.css --watch",
+    "build-css-prod": "tailwindcss -i ./static/src/admin.css -o ./static/admin/css/admin.css --minify"
+  },
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.5.7",
+    "autoprefixer": "^10.4.16",
+    "tailwindcss": "^3.3.5"
+  }
+}
