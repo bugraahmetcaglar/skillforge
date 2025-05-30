@@ -37,3 +37,9 @@ class VCardImportAPIView(BaseAPIView):
         except Exception as e:
             logger.error(f"Import error: {e}")
             return self.error_response("Import failed", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ContactListAPIView(BaseListAPIView):
+    serializer_class = ContactSerializer
+    permission_classes = [IsOwnerOrAdmin]
+    queryset = Contact.objects.filter(is_active=True)
