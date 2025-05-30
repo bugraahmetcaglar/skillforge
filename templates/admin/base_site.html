@@ -1,0 +1,19 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ site_title|default:"SkillForge Admin" }}{% endblock %}
+
+{% block branding %}
+<div class="flex items-center space-x-3">
+    <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h4M9 7h6m-6 4h6m-6 4h6"/>
+        </svg>
+    </div>
+    <h1 class="text-xl font-semibold text-gray-900 dark:text-white">
+        {{ site_header|default:"SkillForge Admin" }}
+    </h1>
+</div>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
