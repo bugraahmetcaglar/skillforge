@@ -7,7 +7,179 @@
     <title>{% block title %}{{ title }} | {{ site_title|default:'SkillForge Admin' }}{% endblock %}</title>
     
     <!-- Tailwind CSS -->
-    <link href="{% static 'admin/css/admin.css' %}" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Custom CSS for admin components -->
+    <style>
+        .admin-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            border: 1px solid rgb(229 231 235);
+        }
+        .dark .admin-card {
+            background: rgb(31 41 55);
+            border-color: rgb(75 85 99);
+        }
+        .btn-primary {
+            background: rgb(37 99 235);
+            color: white;
+            font-weight: 500;
+            padding: 0.75rem 1rem;
+            border-radius: 0.375rem;
+            transition: all 0.2s ease-in-out;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+        }
+        .btn-primary:hover {
+            background: rgb(29 78 216);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .form-input {
+            display: block;
+            width: 100%;
+            border-radius: 0.375rem;
+            border: 1px solid rgb(209 213 219);
+            background: white;
+            color: rgb(17 24 39);
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            font-size: 0.875rem;
+            padding: 0.5rem 0.75rem;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: rgb(59 130 246);
+            box-shadow: 0 0 0 3px rgb(59 130 246 / 0.1);
+        }
+        .dark .form-input {
+            background: rgb(55 65 81);
+            border-color: rgb(75 85 99);
+            color: white;
+        }
+        .dark .form-input:focus {
+            border-color: rgb(59 130 246);
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .animate-slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        /* Fix form positioning */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 3rem 1.5rem;
+        }
+        
+        .login-form-wrapper {
+            margin: 2rem auto 0;
+            width: 100%;
+            max-width: 28rem;
+        }
+        
+        .login-card {
+            padding: 2rem 1rem;
+            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+        }
+        
+        @media (min-width: 640px) {
+            .login-card {
+                border-radius: 1rem;
+                padding: 2rem 2.5rem;
+            }
+        }
+        
+        .header-container {
+            margin: 0 auto;
+            width: 100%;
+            max-width: 28rem;
+        }
+        
+        .logo-container {
+            display: flex;
+            justify-content: center;
+        }
+        
+        .logo-icon {
+            width: 4rem;
+            height: 4rem;
+            background: rgb(37 99 235);
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        
+        .form-field {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: rgb(55 65 81);
+            margin-bottom: 0.5rem;
+        }
+        
+        .dark .form-label {
+            color: rgb(209 213 219);
+        }
+        
+        .input-wrapper {
+            position: relative;
+        }
+        
+        .input-icon {
+            position: absolute;
+            top: 50%;
+            left: 0.75rem;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+        
+        .form-input.with-icon {
+            padding-left: 2.5rem;
+        }
+    </style>
     
     <!-- Google Fonts - Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,12 +192,12 @@
 
 <body class="h-full bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 font-sans antialiased" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': darkMode }">
     
-    <div class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div class="login-container">
         <!-- Header -->
-        <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="header-container">
             <!-- Logo/Icon -->
-            <div class="flex justify-center">
-                <div class="w-16 h-16 bg-primary-600 rounded-2xl flex items-center justify-center shadow-lg">
+            <div class="logo-container">
+                <div class="logo-icon">
                     <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                     </svg>
@@ -42,8 +214,8 @@
         </div>
 
         <!-- Login Form -->
-        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-            <div class="admin-card py-8 px-4 shadow-xl sm:rounded-2xl sm:px-10 animate-fade-in">
+        <div class="login-form-wrapper">
+            <div class="admin-card login-card animate-fade-in">
                 <!-- Dark Mode Toggle -->
                 <div class="flex justify-end mb-6">
                     <button @click="darkMode = !darkMode" 
@@ -57,12 +229,12 @@
                     </button>
                 </div>
 
-                <form method="post" action="{% url 'admin:login' %}" class="space-y-6">
+                <form method="post" action="{% url 'admin:login' %}">
                     {% csrf_token %}
                     
                     <!-- Error Messages -->
                     {% if form.errors %}
-                    <div class="rounded-md bg-red-50 dark:bg-red-900/50 p-4 animate-slide-in">
+                    <div class="rounded-md bg-red-50 dark:bg-red-900/50 p-4 animate-slide-in mb-6">
                         <div class="flex">
                             <div class="flex-shrink-0">
                                 <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -82,13 +254,17 @@
                     {% endif %}
 
                     <!-- Username Field -->
-                    <div>
-                        <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <div class="form-field">
+                        <label for="id_username" class="form-label">
                             Username or Email
                         </label>
-                        <div class="relative">
-                            {{ form.username }}
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <div class="input-wrapper">
+                            <input type="text" 
+                                   name="username" 
+                                   id="id_username"
+                                   class="form-input with-icon"
+                                   required>
+                            <div class="input-icon">
                                 <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                 </svg>
@@ -97,13 +273,17 @@
                     </div>
 
                     <!-- Password Field -->
-                    <div>
-                        <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <div class="form-field">
+                        <label for="id_password" class="form-label">
                             Password
                         </label>
-                        <div class="relative">
-                            {{ form.password }}
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <div class="input-wrapper">
+                            <input type="password" 
+                                   name="password" 
+                                   id="id_password"
+                                   class="form-input with-icon"
+                                   required>
+                            <div class="input-icon">
                                 <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                                 </svg>
@@ -115,8 +295,8 @@
                     <input type="hidden" name="next" value="{{ next }}">
 
                     <!-- Submit Button -->
-                    <div>
-                        <button type="submit" class="w-full btn-primary py-3 text-sm font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition duration-200">
+                    <div class="form-field">
+                        <button type="submit" class="btn-primary">
                             <span class="flex items-center justify-center">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
@@ -134,7 +314,7 @@
                             <div class="w-full border-t border-gray-300 dark:border-gray-600"></div>
                         </div>
                         <div class="relative flex justify-center text-sm">
-                            <span class="px-2 bg-white dark:bg-admin-card-dark text-gray-500 dark:text-gray-400">
+                            <span class="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
                                 Secure Admin Access
                             </span>
                         </div>
@@ -155,7 +335,7 @@
     <!-- Auto-focus on username field -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const usernameField = document.getElementById('{{ form.username.id_for_label }}');
+            const usernameField = document.getElementById('id_username');
             if (usernameField) {
                 usernameField.focus();
             }
@@ -163,3 +343,4 @@
     </script>
 </body>
 </html>
+<html lang="en" class="h-full">
