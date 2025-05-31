@@ -39,21 +39,13 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-
     # API endpoints
     path("api/v1/user/", include("apps.user.v1.urls")),
     path("api/v2/", include("apps.user.v2.urls")),
-
     # API Documentation
-    path(
-        "docs/",
-        schema_view.with_ui("swagger", cache_timeout=0),
-        name="schema-swagger-ui",
-    ),
-
+    path("docs/", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
     # Contacts API endpoints
     path("api/v1/contact/", include("apps.contact.urls")),
-
     path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
 ]
 
