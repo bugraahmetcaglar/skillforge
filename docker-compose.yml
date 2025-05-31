@@ -31,7 +31,7 @@ services:
     stdin_open: true
     volumes:
       - .:/code
-      - ./static:/static
+      - static_files:/code/static/admin/css
     ports:
       - "8000:8000"
     depends_on:
