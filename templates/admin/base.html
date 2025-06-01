@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SkillForge Admin{% endblock %}</title>
+    
+    <!-- Bootstrap 5.3 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Admin Base Styles -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'admin/css/base.css' %}">
+    
+    <!-- Page Specific Styles -->
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="admin-body">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg admin-navbar">
+        <div class="container-fluid">
+            <!-- Brand -->
+            <a class="navbar-brand admin-brand" href="{% url 'admin:dashboard:index' %}">
+                <i class="fas fa-tools me-2"></i>
+                <span>SkillForge Admin</span>
+            </a>
+
+            <!-- Mobile Toggle -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Navigation Items -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {% if current_section == 'dashboard' %}active{% endif %}" 
+                           href="{% url 'admin:dashboard:index' %}">
+                            <i class="fas fa-home me-1"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if current_section == 'users' %}active{% endif %}" 
+                           href="{% url 'admin:user:list' %}">
+                            <i class="fas fa-users me-1"></i>
+                            Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if current_section == 'contacts' %}active{% endif %}" 
+                           href="{% url 'admin:contact:list' %}">
+                            <i class="fas fa-address-book me-1"></i>
+                            Contacts
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- User Menu -->
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle admin-user-menu" href="#" role="button" 
+                           data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>
+                            {{ user.get_full_name|default:user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end admin-dropdown">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'admin:user:detail' pk=user.pk %}">
+                                    <i class="fas fa-user me-2"></i>
+                                    My Profile
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="/admin/">
+                                    <i class="fas fa-cog me-2"></i>
+                                    Django Admin
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/api/v1/user/token/">
+                                    <i class="fas fa-key me-2"></i>
+                                    API Tokens
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="post" action="{% url 'admin:auth:logout' %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="fas fa-sign-out-alt me-2"></i>
+                                        Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="admin-main">
+        <!-- Breadcrumb Navigation -->
+        {% block breadcrumb %}
+        <nav aria-label="breadcrumb" class="admin-breadcrumb">
+            <div class="container-fluid">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'admin:dashboard:index' %}">
+                            <i class="fas fa-home"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    {% block breadcrumb_items %}{% endblock %}
+                </ol>
+            </div>
+        </nav>
+        {% endblock %}
+
+        <!-- Messages -->
+        {% if messages %}
+        <div class="container-fluid">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show admin-alert" role="alert">
+                {% if message.tags == 'success' %}
+                    <i class="fas fa-check-circle me-2"></i>
+                {% elif message.tags == 'error' %}
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                {% elif message.tags == 'warning' %}
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                {% else %}
+                    <i class="fas fa-info-circle me-2"></i>
+                {% endif %}
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Page Content -->
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="admin-footer">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <span class="text-muted">
+                        © 2025 SkillForge. All rights reserved.
+                    </span>
+                </div>
+                <div class="col-md-6 text-end">
+                    <span class="text-muted">
+                        Version 1.0.0 | 
+                        <a href="/docs/" class="text-decoration-none">API Docs</a> |
+                        <a href="https://github.com/skillforge" class="text-decoration-none">GitHub</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <!-- Bootstrap 5.3 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Admin Base JS -->
+    <script src="{% static 'admin/js/base.js' %}"></script>
+    
+    <!-- Page Specific JS -->
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

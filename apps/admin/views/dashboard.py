@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
 from django.utils import timezone
@@ -12,7 +11,7 @@ from apps.contact.models import Contact
 from apps.user.models import User
 
 
-@method_decorator([login_required, staff_member_required], name="dispatch")
+
 class AdminDashboardView(TemplateView):
     """Main admin dashboard with statistics and overview."""
 
@@ -76,7 +75,7 @@ class AdminDashboardView(TemplateView):
         return context
 
 
-@method_decorator([login_required, staff_member_required], name="dispatch")
+# @login_required(login_url="admin:auth:login")
 class AdminStatsAPIView(TemplateView):
     """API endpoint for dashboard statistics (AJAX)."""
 

@@ -12,19 +12,17 @@ class AdminUserForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ["username", "email", "first_name", "last_name", "is_active", "is_staff", "is_superuser"]
+        fields = ["username", "email", "first_name", "last_name", "is_active", "is_superuser"]
         widgets = {
             "username": forms.TextInput(attrs={"class": "form-control", "placeholder": "Enter username"}),
             "email": forms.EmailInput(attrs={"class": "form-control", "placeholder": "Enter email address"}),
             "first_name": forms.TextInput(attrs={"class": "form-control", "placeholder": "Enter first name"}),
             "last_name": forms.TextInput(attrs={"class": "form-control", "placeholder": "Enter last name"}),
             "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
-            "is_staff": forms.CheckboxInput(attrs={"class": "form-check-input"}),
             "is_superuser": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
         help_texts = {
             "username": "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.",
-            "is_staff": "Designates whether the user can log into this admin site.",
             "is_superuser": "Designates that this user has all permissions without explicitly assigning them.",
         }
 
@@ -74,7 +72,6 @@ class AdminUserCreateForm(UserCreationForm):
             "password1",
             "password2",
             "is_active",
-            "is_staff",
             "is_superuser",
         ]
         widgets = {
@@ -85,7 +82,6 @@ class AdminUserCreateForm(UserCreationForm):
             "is_active": forms.CheckboxInput(
                 attrs={"class": "form-check-input", "checked": True}  # Default to active
             ),
-            "is_staff": forms.CheckboxInput(attrs={"class": "form-check-input"}),
             "is_superuser": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
 
@@ -145,7 +141,6 @@ class AdminUserSearchForm(forms.Form):
             ("", "All Users"),
             ("active", "Active Users"),
             ("inactive", "Inactive Users"),
-            ("staff", "Staff Users"),
             ("superuser", "Superusers"),
         ],
         widget=forms.Select(attrs={"class": "form-select", "id": "status-filter"}),
