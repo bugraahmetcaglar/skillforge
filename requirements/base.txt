@@ -40,3 +40,8 @@ django-coverage-plugin==2.0.3  # https://github.com/nedbat/django_coverage_plugi
 # Mock
 # ------------------------------------------------------------------------------
 requests-mock==1.11.0  # https://github.com/jamielennox/requests-mock
+
+
+# vObject
+# ------------------------------------------------------------------------------
+vobject==0.9.6.1

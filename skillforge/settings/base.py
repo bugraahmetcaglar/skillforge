@@ -42,6 +42,7 @@ DJANGO_APPS = [
 ]
 
 LOCAL_APPS = [
+    "core",
     "apps.user",
     "apps.contact",
 ]
@@ -79,7 +80,9 @@ ROOT_URLCONF = "skillforge.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [
+            BASE_DIR / "templates",  # Bu satır eklenmeli
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -150,8 +153,8 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -159,15 +162,15 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
     ],
-    'EXCEPTION_HANDLER': 'core.views.custom_exception_handler',
-    'DEFAULT_PAGINATION_CLASS': 'core.pagination.CustomPageNumberPagination',
-    'PAGE_SIZE': 25,
+    "EXCEPTION_HANDLER": "core.views.custom_exception_handler",
+    "DEFAULT_PAGINATION_CLASS": "core.pagination.CustomPageNumberPagination",
+    "PAGE_SIZE": 25,
 }
 
 SIMPLE_JWT = {
@@ -184,11 +187,11 @@ SIMPLE_JWT = {
 # CELERY
 # -------------------------------------
 CELERY_BEAT_SCHEDULE = {
-    'cleanup-inactive-contacts': {
-        'task': 'apps.contact.tasks.cleanup_inactive_contacts',
-        'schedule': timedelta(days=1),
-        'options': {
-            'expires': 3600,
+    "cleanup-inactive-contacts": {
+        "task": "apps.contact.tasks.cleanup_inactive_contacts",
+        "schedule": timedelta(days=1),
+        "options": {
+            "expires": 3600,
         },
     },
 }
