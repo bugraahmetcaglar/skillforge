@@ -17,7 +17,7 @@ from apps.user.models import User
 class AdminLoginView(TemplateView):
     """Simple template-based admin login view."""
 
-    template_name = "admin/auth/login.html"
+    template_name = "admin/login.html"
 
     def post(self, request, *args, **kwargs):
         """Handle login form submission."""

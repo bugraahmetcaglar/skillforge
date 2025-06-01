@@ -1,181 +1,266 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}SkillForge Admin{% endblock %}</title>
     
-    <!-- Bootstrap 5.3 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    {% load static %}
+    <!-- Tailwind CSS -->
+    <link rel="stylesheet" href="{% static 'admin/css/admin.css' %}">
     
-    <!-- Font Awesome 6 -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Admin Base Styles -->
-    {% load static %}
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom Admin Styles -->
     <link rel="stylesheet" href="{% static 'admin/css/base.css' %}">
     
-    <!-- Page Specific Styles -->
     {% block extra_css %}{% endblock %}
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Override Tailwind with proper admin colors */
+        .bg-admin-dark { background-color: #111827; }
+        .bg-admin-gray { background-color: #1f2937; }
+        .text-admin-light { color: #f9fafb; }
+        .border-admin { border-color: #374151; }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+    </style>
 </head>
-<body class="admin-body">
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg admin-navbar">
-        <div class="container-fluid">
-            <!-- Brand -->
-            <a class="navbar-brand admin-brand" href="{% url 'admin:dashboard:index' %}">
-                <i class="fas fa-tools me-2"></i>
-                <span>SkillForge Admin</span>
-            </a>
+<body class="h-full bg-gray-900 text-white antialiased">
+    <div class="min-h-full">
+        <!-- Navigation -->
+        <nav class="bg-gray-800 border-b border-gray-700 sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <!-- Logo and Main Nav -->
+                    <div class="flex items-center">
+                        <a href="{% url 'admin:dashboard:index' %}" class="flex items-center gap-3 text-white hover:text-blue-400 transition-colors">
+                            <i class="fas fa-tools text-2xl text-blue-400"></i>
+                            <span class="text-xl font-semibold">SkillForge Admin</span>
+                        </a>
+                        
+                        <!-- Main Navigation -->
+                        <div class="hidden md:flex items-center ml-10 space-x-8">
+                            <a href="{% url 'admin:dashboard:index' %}" 
+                               class="flex items-center gap-2 text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors
+                                      {% if request.resolver_match.url_name == 'index' %}text-blue-400 bg-blue-400/10{% endif %}">
+                                <i class="fas fa-tachometer-alt"></i>
+                                Dashboard
+                            </a>
+                            
+                            <a href="{% url 'admin:dashboard:index' %}" 
+                               class="flex items-center gap-2 text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors
+                                      {% if 'user' in request.path %}text-blue-400 bg-blue-400/10{% endif %}">
+                                <i class="fas fa-users"></i>
+                                Users
+                            </a>
+                            
+                            <a href="{% url 'contact_list_api_view' %}" 
+                               class="flex items-center gap-2 text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors
+                                      {% if 'contact' in request.path %}text-blue-400 bg-blue-400/10{% endif %}">
+                                <i class="fas fa-address-book"></i>
+                                Contacts
+                            </a>
+                        </div>
+                    </div>
 
-            <!-- Mobile Toggle -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <!-- Navigation Items -->
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link {% if current_section == 'dashboard' %}active{% endif %}" 
-                           href="{% url 'admin:dashboard:index' %}">
-                            <i class="fas fa-home me-1"></i>
-                            Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if current_section == 'users' %}active{% endif %}" 
-                           href="{% url 'admin:user:list' %}">
-                            <i class="fas fa-users me-1"></i>
-                            Users
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if current_section == 'contacts' %}active{% endif %}" 
-                           href="{% url 'admin:contact:list' %}">
-                            <i class="fas fa-address-book me-1"></i>
-                            Contacts
-                        </a>
-                    </li>
-                </ul>
-
-                <!-- User Menu -->
-                <ul class="navbar-nav">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle admin-user-menu" href="#" role="button" 
-                           data-bs-toggle="dropdown">
-                            <i class="fas fa-user-circle me-1"></i>
-                            {{ user.get_full_name|default:user.username }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end admin-dropdown">
-                            <li>
-                                <a class="dropdown-item" href="{% url 'admin:user:detail' pk=user.pk %}">
-                                    <i class="fas fa-user me-2"></i>
-                                    My Profile
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item" href="/admin/">
-                                    <i class="fas fa-cog me-2"></i>
-                                    Django Admin
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="/api/v1/user/token/">
-                                    <i class="fas fa-key me-2"></i>
-                                    API Tokens
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <form method="post" action="{% url 'admin:auth:logout' %}" class="d-inline">
-                                    {% csrf_token %}
-                                    <button type="submit" class="dropdown-item text-danger">
-                                        <i class="fas fa-sign-out-alt me-2"></i>
-                                        Logout
+                    <!-- User Menu -->
+                    <div class="flex items-center">
+                        <!-- Notifications -->
+                        <button class="text-gray-400 hover:text-white p-2 rounded-md transition-colors">
+                            <i class="fas fa-bell text-lg"></i>
+                        </button>
+                        
+                        <!-- User Dropdown -->
+                        <div class="ml-3 relative">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-blue-500 rounded-full w-8 h-8 flex items-center justify-center text-white font-semibold text-sm">
+                                    {{ user.first_name.0|default:user.username.0|upper }}
+                                </div>
+                                <div class="hidden md:block">
+                                    <p class="text-sm font-medium text-white">{{ user.first_name|default:user.username }}</p>
+                                    <p class="text-xs text-gray-400">{{ user.email }}</p>
+                                </div>
+                                <div class="relative">
+                                    <button class="text-gray-400 hover:text-white transition-colors" onclick="toggleUserMenu()">
+                                        <i class="fas fa-chevron-down text-sm"></i>
                                     </button>
-                                </form>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
+                                    
+                                    <!-- Dropdown Menu -->
+                                    <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg py-1 z-50">
+                                        <a href="{% url 'admin:dashboard:index' %}" 
+                                           class="flex items-center gap-2 px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 transition-colors">
+                                            <i class="fas fa-user"></i>
+                                            Profile
+                                        </a>
+                                        <a href="{% url 'admin:dashboard:index' %}" 
+                                           class="flex items-center gap-2 px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 transition-colors">
+                                            <i class="fas fa-key"></i>
+                                            Change Password
+                                        </a>
+                                        <hr class="my-1 border-gray-700">
+                                        <a href="{% url 'admin:auth:logout' %}" 
+                                           class="flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-gray-700 transition-colors">
+                                            <i class="fas fa-sign-out-alt"></i>
+                                            Sign Out
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </nav>
-
-    <!-- Main Content Area -->
-    <main class="admin-main">
-        <!-- Breadcrumb Navigation -->
-        {% block breadcrumb %}
-        <nav aria-label="breadcrumb" class="admin-breadcrumb">
-            <div class="container-fluid">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item">
-                        <a href="{% url 'admin:dashboard:index' %}">
-                            <i class="fas fa-home"></i>
-                            Dashboard
-                        </a>
-                    </li>
-                    {% block breadcrumb_items %}{% endblock %}
-                </ol>
+            
+            <!-- Mobile menu -->
+            <div class="md:hidden">
+                <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-gray-700">
+                    <a href="{% url 'admin:dashboard:index' %}" 
+                       class="flex items-center gap-2 text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Dashboard
+                    </a>
+                    <a href="" 
+                       class="flex items-center gap-2 text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
+                        <i class="fas fa-users"></i>
+                        Users
+                    </a>
+                    <a href="{% url 'contact_list_api_view' %}" 
+                       class="flex items-center gap-2 text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
+                        <i class="fas fa-address-book"></i>
+                        Contacts
+                    </a>
+                </div>
             </div>
         </nav>
-        {% endblock %}
+
+        <!-- Breadcrumb -->
+        {% if breadcrumbs %}
+        <div class="bg-gray-800 border-b border-gray-700">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+                <nav class="flex" aria-label="Breadcrumb">
+                    <ol class="flex items-center space-x-2">
+                        {% for breadcrumb in breadcrumbs %}
+                        <li class="flex items-center">
+                            {% if not forloop.first %}
+                            <i class="fas fa-chevron-right text-gray-500 mx-2 text-sm"></i>
+                            {% endif %}
+                            {% if breadcrumb.url %}
+                            <a href="{{ breadcrumb.url }}" class="text-gray-400 hover:text-white text-sm transition-colors">
+                                {{ breadcrumb.title }}
+                            </a>
+                            {% else %}
+                            <span class="text-white text-sm">{{ breadcrumb.title }}</span>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ol>
+                </nav>
+            </div>
+        </div>
+        {% endif %}
 
         <!-- Messages -->
         {% if messages %}
-        <div class="container-fluid">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
             {% for message in messages %}
-            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show admin-alert" role="alert">
-                {% if message.tags == 'success' %}
-                    <i class="fas fa-check-circle me-2"></i>
-                {% elif message.tags == 'error' %}
-                    <i class="fas fa-exclamation-circle me-2"></i>
-                {% elif message.tags == 'warning' %}
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                {% else %}
-                    <i class="fas fa-info-circle me-2"></i>
-                {% endif %}
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="mb-4 p-4 rounded-lg border-l-4 
+                        {% if message.tags == 'success' %}bg-green-900/50 border-green-500 text-green-100
+                        {% elif message.tags == 'error' %}bg-red-900/50 border-red-500 text-red-100
+                        {% elif message.tags == 'warning' %}bg-yellow-900/50 border-yellow-500 text-yellow-100
+                        {% else %}bg-blue-900/50 border-blue-500 text-blue-100{% endif %}">
+                <div class="flex items-center">
+                    {% if message.tags == 'success' %}
+                    <i class="fas fa-check-circle mr-2"></i>
+                    {% elif message.tags == 'error' %}
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    {% elif message.tags == 'warning' %}
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    {% else %}
+                    <i class="fas fa-info-circle mr-2"></i>
+                    {% endif %}
+                    {{ message }}
+                </div>
             </div>
             {% endfor %}
         </div>
         {% endif %}
 
-        <!-- Page Content -->
-        {% block content %}{% endblock %}
-    </main>
+        <!-- Main Content -->
+        <main class="flex-1">
+            {% block content %}{% endblock %}
+        </main>
 
-    <!-- Footer -->
-    <footer class="admin-footer">
-        <div class="container-fluid">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <span class="text-muted">
-                        © 2025 SkillForge. All rights reserved.
-                    </span>
-                </div>
-                <div class="col-md-6 text-end">
-                    <span class="text-muted">
-                        Version 1.0.0 | 
-                        <a href="/docs/" class="text-decoration-none">API Docs</a> |
-                        <a href="https://github.com/skillforge" class="text-decoration-none">GitHub</a>
-                    </span>
+        <!-- Footer -->
+        <footer class="bg-gray-800 border-t border-gray-700 mt-12">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <p class="text-gray-400 text-sm">
+                            © 2025 SkillForge. All rights reserved.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="text-gray-400 text-sm">Version 1.0.0</span>
+                        <span class="text-gray-600">|</span>
+                        <a href="/docs/" class="text-gray-400 hover:text-white text-sm transition-colors">
+                            API Docs
+                        </a>
+                        <span class="text-gray-600">|</span>
+                        <a href="https://github.com" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-github"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
-        </div>
-    </footer>
+        </footer>
+    </div>
 
     <!-- JavaScript -->
-    <!-- Bootstrap 5.3 -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Toggle user menu
+        function toggleUserMenu() {
+            const menu = document.getElementById('userMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Close user menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('userMenu');
+            const button = event.target.closest('button');
+            
+            if (!button || !button.onclick) {
+                menu.classList.add('hidden');
+            }
+        });
+
+        // Auto-hide messages after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const messages = document.querySelectorAll('[class*="bg-green-900"], [class*="bg-red-900"], [class*="bg-yellow-900"], [class*="bg-blue-900"]');
+            messages.forEach(function(message) {
+                setTimeout(function() {
+                    message.style.transition = 'opacity 0.5s ease';
+                    message.style.opacity = '0';
+                    setTimeout(function() {
+                        message.remove();
+                    }, 500);
+                }, 5000);
+            });
+        });
+    </script>
     
-    <!-- Admin Base JS -->
-    <script src="{% static 'admin/js/base.js' %}"></script>
-    
-    <!-- Page Specific JS -->
     {% block extra_js %}{% endblock %}
 </body>
 </html>

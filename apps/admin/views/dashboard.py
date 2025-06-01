@@ -15,7 +15,7 @@ from apps.user.models import User
 class AdminDashboardView(TemplateView):
     """Main admin dashboard with statistics and overview."""
 
-    template_name = "admin/dashboard/index.html"
+    template_name = "admin/dashboard.html"
 
     def get_context_data(self, **kwargs) -> dict:
         """Get dashboard statistics and context data."""
