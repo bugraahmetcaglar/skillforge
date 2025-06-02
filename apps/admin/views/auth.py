@@ -29,7 +29,7 @@ class AdminLoginView(TemplateView):
             return self.get(request, *args, **kwargs)
 
         user = User.objects.filter(Q(Q(email=username) | Q(username=username)), is_superuser=True).first()
-        if user is None or not getattr(user, "is_superuser", False):
+        if user is None or not user.is_superuser:
             messages.error(request, "Invalid request.")
             return self.get(request, *args, **kwargs)
 
