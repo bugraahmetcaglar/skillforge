@@ -1,15 +1,18 @@
 import logging
 
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, permissions
 from rest_framework.parsers import MultiPartParser
+from rest_framework import filters
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from apps.contact.filter import ContactFilter
 from apps.contact.models import Contact
-from apps.contact.serializers import VCardImportSerializer, ContactSerializer
+from apps.contact.serializers import ContactDetailSerializer, ContactListSerializer, VCardImportSerializer
 from apps.contact.services.vcard_service import VCardImportService
 from core.permissions import IsOwnerOrAdmin
-from core.views import BaseAPIView, BaseListAPIView
+from core.views import BaseAPIView, BaseListAPIView, BaseRetrieveAPIView
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +43,83 @@ class VCardImportAPIView(BaseAPIView):
 
 
 class ContactListAPIView(BaseListAPIView):
-    serializer_class = ContactSerializer
+    """Contact List API with filtering and search
+
+    Features:
+    - Pagination
+    - Advanced filtering (name, email, phone, organization, dates, etc.)
+    - Full-text search across multiple fields
+    - Ordering by various fields
+    - Owner-based access control
+
+    Query Parameters:
+    - search: Global search across name, email, phone, organization
+    - first_name, last_name: Filter by name (case-insensitive)
+    - email: Filter by email (case-insensitive)
+    - phone: Search in any phone field
+    - organization, job_title, department: Organization filters
+    - import_source: Filter by import source (google, outlook, vcard, etc.)
+    - created_after, created_before: Date range filters
+    - has_birthday, has_photo, has_notes: Boolean filters
+    - tags: Filter by tag content
+    - ordering: Sort by fields (created_at, first_name, last_name, etc.)
+
+    Example URLs:
+    - /api/v1/contact/list/?search=john
+    - /api/v1/contact/list/?organization=google&has_birthday=true
+    - /api/v1/contact/list/?created_after=2024-01-01&ordering=-created_at
+    """
+
+    serializer_class = ContactListSerializer
     permission_classes = [IsOwnerOrAdmin]
-    queryset = Contact.objects.filter(is_active=True)
+    filterset_class = ContactFilter
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ["first_name", "last_name", "email", "mobile_phone", "organization"]
+    ordering_fields = ["created_at", "first_name", "last_name", "organization", "imported_at"]
+
+    def get_queryset(self):
+        return Contact.objects.filter(owner=self.request.user, is_active=True).select_related("owner")
+
+
+class ContactDetailAPIView(BaseRetrieveAPIView):
+    """Contact Detail API - Get single contact with full information
+
+    Features:
+    - Detailed contact information with formatted data
+    - Calculated fields (age, display name, formatted phones)
+    - Social media links formatting
+    - Owner-based access control
+    - Rich phone number presentation
+
+    Returns:
+    - All contact fields except sensitive data (owner, external_id)
+    - display_name: Formatted full name or fallback
+    - contact_age: Calculated age from birthday
+
+    URL: /api/v1/contact/<uuid:pk>/
+    Method: GET
+    """
+
+    serializer_class = ContactDetailSerializer
+    permission_classes = [IsOwnerOrAdmin]
+    lookup_field = "pk"
+
+    def get_queryset(self):
+        """Get active contacts for the authenticated user only"""
+        return Contact.objects.filter(owner=self.request.user, is_active=True).select_related("owner")
+
+    def retrieve(self, request, *args, **kwargs):
+        """Override to add custom response format and logging"""
+        try:
+            instance = self.get_object()
+            serializer = self.get_serializer(instance)
+
+            # Log contact access for analytics (optional)
+            logger.info(f"Contact {instance.id} accessed by user {request.user.id}")
+
+            return self.success_response(
+                data=serializer.data, message=f"Contact details for {serializer.data.get('display_name', 'Unknown')}"
+            )
+
+        except Contact.DoesNotExist:
+            return self.error_response("Contact not found", status_code=status.HTTP_404_NOT_FOUND)
