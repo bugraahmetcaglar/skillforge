@@ -16,6 +16,8 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.views import exception_handler as drf_exception_handler
 
+from core.pagination import CustomPageNumberPagination
+
 
 logger = logging.getLogger(__name__)
 
@@ -99,6 +101,9 @@ class BaseAPIView(GenericAPIView):
 
 
 class BaseListAPIView(mixins.ListModelMixin, BaseAPIView):
+    pagination_class = CustomPageNumberPagination
+    ordering = ["-created_at"]
+
     def get(self, request, *args, **kwargs):
         """Handle GET requests with pagination and standardized response.
 
