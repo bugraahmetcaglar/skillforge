@@ -58,6 +58,7 @@ THIRD_PARTY_APPS = [
     "django_celery_beat",
     "django_celery_results",
     "django_redis",
+    "django_q",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS + THIRD_PARTY_APPS
@@ -146,13 +147,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 STATIC_URL = "static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATICFILES_DIRS = []
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -223,29 +222,6 @@ CACHES = {
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
 
-# CELERY
-# -------------------------------------
-
-# Celery Configuration
-# https://docs.celeryproject.org/en/stable/userguide/configuration.html
-CELERY_BROKER_URL = f"redis://{os.environ.get('REDIS_HOST', 'localhost')}:6379/0"
-CELERY_RESULT_BACKEND = f"redis://{os.environ.get('REDIS_HOST', 'localhost')}:6379/0"
-CELERY_ACCEPT_CONTENT = ["json"]
-CELERY_TASK_SERIALIZER = "json"
-CELERY_RESULT_SERIALIZER = "json"
-CELERY_TIMEZONE = TIME_ZONE
-
-# Celery Beat Schedule
-CELERY_BEAT_SCHEDULE = {
-    "cleanup-inactive-contacts": {
-        "task": "apps.contact.tasks.cleanup_inactive_contacts",
-        "schedule": timedelta(days=1),
-        "options": {
-            "expires": 3600,
-        },
-    },
-}
-
 # Logging Configuration
 # https://docs.djangoproject.com/en/5.2/topics/logging/
 LOGGING = {
@@ -292,26 +268,39 @@ LOGGING = {
     },
 }
 
-# Security Settings for Production
-# https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-if not DEBUG:
-    SECURE_BROWSER_XSS_FILTER = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
-    SECURE_HSTS_SECONDS = 31536000
-    SECURE_REDIRECT_EXEMPT = []
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    X_FRAME_OPTIONS = "DENY"
+# Django-Q2 Configuration
+# -------------------------------------
+Q_CLUSTER = {
+    'name': 'skillforge',
+    'workers': 4,  # Number of workers
+    'recycle': 500,  # Recycle workers after this many tasks
+    'timeout': 60,  # Task timeout in seconds
+    'compress': True,  # Compress task data
+    'save_limit': 250,  # Number of successful tasks to keep in database
+    'queue_limit': 500,  # Maximum number of tasks in queue
+    'cpu_affinity': 1,  # CPU affinity for workers
+    'label': 'Django Q2',  # Label for the cluster
+    'redis': {
+        'host': os.environ.get('REDIS_HOST', 'redis'),
+        'port': int(os.environ.get('REDIS_PORT', 6379)),
+        'db': 0,
+        'password': os.environ.get('REDIS_PASSWORD', None),
+    },
+    'orm': 'default',  # Use default database for task storage
+    'bulk': 10,  # Number of tasks to process at once
+    'sync': False,  # Run tasks asynchronously
+    'catch_up': True,  # Catch up on missed scheduled tasks
+    'retry': 120,  # Retry failed tasks after this many seconds
+    'max_attempts': 3,  # Maximum retry attempts
+}
 
-# Email Configuration (for production)
-# if not DEBUG:
-#     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-#     EMAIL_HOST = os.environ.get("EMAIL_HOST")
-#     EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
-#     EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
-#     EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
-#     EMAIL_USE_TLS = True
-#     DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL")
+# Cache Configuration (using Redis)
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://{os.environ.get('REDIS_HOST', 'redis')}:{os.environ.get('REDIS_PORT', 6379)}/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
