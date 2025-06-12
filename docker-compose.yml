@@ -6,22 +6,6 @@ volumes:
   static_files: {}
 
 services:
-  # Frontend build service for Tailwind CSS
-  frontend:
-    build: 
-      context: .
-      dockerfile: Dockerfile.frontend
-      target: frontend-builder
-    volumes:
-      - ./static/src:/app/static/src
-      - ./templates:/app/templates  
-      - ./tailwind.config.js:/app/tailwind.config.js
-      - ./postcss.config.js:/app/postcss.config.js
-      - static_files:/app/static/admin/css
-    command: npm run build-css
-    profiles:
-      - frontend
-
   web:
     build: 
       context: .
@@ -31,7 +15,8 @@ services:
     stdin_open: true
     volumes:
       - .:/code
-      - static_files:/code/static/admin/css
+      - static_files:/code/static
+      - ./media:/code/media
     ports:
       - "8000:8000"
     depends_on:
