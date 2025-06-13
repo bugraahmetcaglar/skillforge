@@ -1,5 +1,43 @@
+from __future__ import annotations
+
+from typing import List, Tuple
 from enum import Enum
 from django.db import models
+
+
+class BaseEnum(Enum):
+    """Base enum class with utility methods"""
+
+    @classmethod
+    def choices(cls) -> List[Tuple[str, str]]:
+        """Generate Django/MongoEngine choices from enum"""
+        return [(item.value, item.name.title()) for item in cls]
+
+    @classmethod
+    def values(cls) -> List[str]:
+        """Get all enum values"""
+        return [item.value for item in cls]
+
+    @classmethod
+    def names(cls) -> List[str]:
+        """Get all enum names"""
+        return [item.name for item in cls]
+
+    @classmethod
+    def get_display_name(cls, value: str) -> str:
+        """Get display name for a value"""
+        for item in cls:
+            if item.value == value:
+                return item.name.title()
+        return value
+
+    @classmethod
+    def is_valid(cls, value: str) -> bool:
+        """Check if value is valid for this enum"""
+        return value in cls.values()
+
+    def __str__(self) -> str:
+        return self.value
 
 
 class SourceTextChoices(models.TextChoices):
