@@ -4,6 +4,7 @@ from typing import Any
 from rest_framework import serializers
 
 from apps.contact.models import Contact
+from core.views import BaseRetrieveAPIView
 
 
 class VCardImportSerializer(serializers.Serializer):
@@ -23,6 +24,7 @@ class VCardImportSerializer(serializers.Serializer):
             raise serializers.ValidationError("Empty file provided.")
 
         try:
+            # TODO: Improve performance
             # Save current position
             current_position = value.tell()
 
@@ -46,8 +48,61 @@ class VCardImportSerializer(serializers.Serializer):
         return value
 
 
-class ContactSerializer(serializers.ModelSerializer):
+class ContactListSerializer(serializers.ModelSerializer):
+
+    display_name = serializers.SerializerMethodField()
+    primary_phone = serializers.SerializerMethodField()
+    contact_age = serializers.SerializerMethodField()
 
     class Meta:
         model = Contact
-        exclude = ("id",)
+        exclude = ("owner", "is_active", "deactivated_at", "external_id")
+
+    def get_display_name(self, obj: Contact) -> str:
+        if obj.full_name:
+            return obj.full_name
+        if obj.first_name or obj.last_name:
+            return f"{obj.first_name} {obj.last_name}".strip()
+        if obj.email:
+            return obj.email
+        return "Unknown Contact"
+
+    def get_primary_phone(self, obj: Contact) -> str | None:
+        return obj.mobile_phone or obj.home_phone or obj.work_phone
+
+    def get_contact_age(self, obj: Contact) -> int | None:
+        if not obj.birthday:
+            return None
+
+        from datetime import date
+
+        today = date.today()
+        return today.year - obj.birthday.year - ((today.month, today.day) < (obj.birthday.month, obj.birthday.day))
+
+
+class ContactDetailSerializer(serializers.ModelSerializer):
+
+    display_name = serializers.SerializerMethodField()
+    contact_age = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Contact
+        exclude = ["owner", "external_id"]
+
+    def get_display_name(self, obj: Contact) -> str:
+        """Get formatted display name"""
+        if obj.full_name:
+            return obj.full_name
+        if obj.first_name or obj.last_name:
+            return f"{obj.first_name} {obj.last_name}".strip()
+        return "Unknown Contact"
+
+    def get_contact_age(self, obj: Contact) -> int | None:
+        """Calculate contact age if birthday exists"""
+        if not obj.birthday:
+            return None
+
+        from datetime import date
+
+        today = date.today()
+        return today.year - obj.birthday.year - ((today.month, today.day) < (obj.birthday.month, obj.birthday.day))

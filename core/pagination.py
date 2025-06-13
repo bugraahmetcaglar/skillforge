@@ -1,9 +1,10 @@
-# core/pagination.py dosyası
 from __future__ import annotations
 
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from typing import Any
+
+from core.utils import recursive_getattr
 
 
 class CustomPageNumberPagination(PageNumberPagination):
@@ -17,7 +18,6 @@ class CustomPageNumberPagination(PageNumberPagination):
 
     page_size = 25
     page_size_query_param = "page_size"
-    max_page_size = 100
 
     def get_paginated_response(self, data: list[Any]) -> Response:
         """Override to return a response in our standard format.
@@ -32,7 +32,7 @@ class CustomPageNumberPagination(PageNumberPagination):
             {
                 "success": True,
                 "data": {
-                    "count": self.page.paginator.count,
+                    "count": recursive_getattr(self, "page.paginator.count", ""),
                     "next": self.get_next_link(),
                     "previous": self.get_previous_link(),
                     "results": data,

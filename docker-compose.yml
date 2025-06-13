@@ -2,7 +2,6 @@ version: '3.7'
 
 volumes:
   postgres_data: {}
-  local_bitnami_redis_data: {}
 
 services:
   web:
@@ -14,17 +13,15 @@ services:
     stdin_open: true
     volumes:
       - .:/code
-      - ./static:/static
     ports:
       - "8000:8000"
     depends_on:
       - db
       - redis
-      - celery
+      - qcluster
     env_file:
       - ./dev.env
-    restart:
-      unless-stopped
+    restart: unless-stopped
 
   db:
     restart: always
@@ -47,14 +44,13 @@ services:
     ports:
       - "6379:6379"
     hostname: redis
-    restart:
-      unless-stopped
+    restart: unless-stopped
 
-  celery:
+  qcluster:
     build:
       context: .
       dockerfile: Dockerfile
-    command: celery -A skillforge worker -l info
+    command: python manage.py qcluster
     volumes:
       - .:/code
     depends_on:
@@ -63,19 +59,3 @@ services:
     env_file:
       - ./dev.env
     restart: on-failure
-
-  flower:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: celery --broker=redis://redis:6379/0 flower --port=5555
-    ports:
-      - "5555:5555"
-    depends_on:
-      - celery
-      - redis
-    env_file:
-      - ./dev.env
-
-
-    
