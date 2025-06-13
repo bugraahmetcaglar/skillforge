@@ -47,6 +47,7 @@ LOCAL_APPS = [
     "core",
     "apps.user",
     "apps.contact",
+    "apps.log",
 ]
 
 THIRD_PARTY_APPS = [
@@ -102,6 +103,13 @@ WSGI_APPLICATION = "skillforge.wsgi.application"
 
 # Database - Updated for psycopg3
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+
+# MongoDB Configuration
+MONGO_HOST = os.environ.get('MONGO_HOST', 'mongodb://mongodb:27017/')
+MONGO_DB_NAME = os.environ.get('MONGO_DB_NAME', 'skillforge_logs')
+MONGO_USER = os.environ.get('MONGO_USER')
+MONGO_PASSWORD = os.environ.get('MONGO_PASSWORD')
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -116,6 +124,22 @@ DATABASES = {
         },
     }
 }
+
+# MongoEngine Connection
+import mongoengine
+
+def setup_mongodb():
+    """Setup MongoDB connection"""
+    mongoengine.connect(
+        db=MONGO_DB_NAME,
+        host=MONGO_HOST,
+        username=MONGO_USER,
+        password=MONGO_PASSWORD,
+        authentication_source=os.environ.get('MONGO_AUTH_SOURCE', 'admin'),
+    )
+
+setup_mongodb()
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -224,6 +248,7 @@ SESSION_CACHE_ALIAS = "default"
 
 # Logging Configuration
 # https://docs.djangoproject.com/en/5.2/topics/logging/
+# Updated Logging Configuration - MongoDB only
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -238,16 +263,14 @@ LOGGING = {
         },
     },
     "handlers": {
-        "file": {
-            "level": "INFO",
-            "class": "logging.FileHandler",
-            "filename": BASE_DIR / "logs" / "django.log",
-            "formatter": "verbose",
-        },
         "console": {
             "level": "DEBUG",
             "class": "logging.StreamHandler",
             "formatter": "simple",
+        },
+        "mongodb": {
+            "level": "INFO",
+            "class": "apps.log.handlers.MongoDBLogHandler",
         },
     },
     "root": {
@@ -256,12 +279,17 @@ LOGGING = {
     },
     "loggers": {
         "django": {
-            "handlers": ["file", "console"],
+            "handlers": ["console", "mongodb"],
             "level": "INFO",
             "propagate": False,
         },
         "apps": {
-            "handlers": ["file", "console"],
+            "handlers": ["console", "mongodb"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+        "core": {
+            "handlers": ["console", "mongodb"],
             "level": "DEBUG",
             "propagate": False,
         },
