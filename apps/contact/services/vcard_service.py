@@ -6,10 +6,10 @@ import quopri
 from typing import Any
 from vobject.base import readOne as vobject_readOne
 
+from apps.contact.enums import SourceEnum
 from apps.contact.models import Contact
 from apps.contact.utils import generate_external_id, normalize_phone_number
 from apps.user.models import User
-from core.enums import SourceEnum
 from core.utils import recursive_getattr
 
 logger = logging.getLogger(__name__)

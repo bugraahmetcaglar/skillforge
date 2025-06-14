@@ -57,7 +57,6 @@ class SourceTextChoices(models.TextChoices):
     VCARD = "vcard", "vCard"
 
 
-# TODO: Celery task implementation
 class ImportStatus(models.TextChoices):
     """Status choices for import tasks"""
 
@@ -66,9 +65,3 @@ class ImportStatus(models.TextChoices):
     COMPLETED = "completed", "Completed"
     FAILED = "failed", "Failed"
 
-
-class SourceEnum(Enum):
-    VCARD = "vcard"
-
-    def __str__(self) -> str:
-        return self.value
