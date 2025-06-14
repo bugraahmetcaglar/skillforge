@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DEBUG")
+DEBUG = os.environ.get("DEBUG", False)
 
 ALLOWED_HOSTS = ["*"]
 
@@ -56,8 +56,6 @@ THIRD_PARTY_APPS = [
     "django_filters",
     "drf_yasg",
     "corsheaders",
-    "django_celery_beat",
-    "django_celery_results",
     "django_redis",
     "django_q",
 ]
@@ -105,28 +103,26 @@ WSGI_APPLICATION = "skillforge.wsgi.application"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 # MongoDB Configuration
-MONGO_HOST = os.environ.get('MONGO_HOST', 'mongodb://mongodb:27017/')
-MONGO_DB_NAME = os.environ.get('MONGO_DB_NAME', 'skillforge_logs')
-MONGO_USER = os.environ.get('MONGO_USER')
-MONGO_PASSWORD = os.environ.get('MONGO_PASSWORD')
+MONGO_HOST = os.environ.get("MONGO_HOST", "mongodb://mongodb:27017/")
+MONGO_DB_NAME = os.environ.get("MONGO_DB_NAME", "skillforge_logs")
+MONGO_USER = os.environ.get("MONGO_USER", "skillforge")
+MONGO_PASSWORD = os.environ.get("MONGO_PASSWORD", "skillforge")
+MONGO_AUTH_SOURCE = os.environ.get("MONGO_AUTH_SOURCE", "admin")
 
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("DB_NAME"),
-        "USER": os.environ.get("DB_USER"),
-        "PASSWORD": os.environ.get("DB_PASSWORD"),
-        "HOST": os.environ.get("DB_HOST"),
-        "PORT": os.environ.get("DB_PORT"),
-        "OPTIONS": {
-            # psycopg3 specific options
-            "options": "-c default_transaction_isolation=read committed"
-        },
+        "NAME": os.environ.get("DB_NAME", "skillforge-dev"),
+        "USER": os.environ.get("DB_USER", "skillforge"),
+        "PASSWORD": os.environ.get("DB_PASSWORD", "skillforge"),
+        "HOST": os.environ.get("DB_HOST", "db"),
+        "PORT": os.environ.get("DB_PORT", "5432"),
     }
 }
 
 # MongoEngine Connection
 import mongoengine
+
 
 def setup_mongodb():
     """Setup MongoDB connection"""
@@ -135,8 +131,9 @@ def setup_mongodb():
         host=MONGO_HOST,
         username=MONGO_USER,
         password=MONGO_PASSWORD,
-        authentication_source=os.environ.get('MONGO_AUTH_SOURCE', 'admin'),
+        authentication_source=MONGO_AUTH_SOURCE,
     )
+
 
 setup_mongodb()
 
@@ -218,7 +215,7 @@ SIMPLE_JWT = {
 
 # CORS Configuration
 # https://github.com/adamchainz/django-cors-headers
-CORS_ALLOW_ALL_ORIGINS = DEBUG
+CORS_ALLOW_ALL_ORIGINS = True if DEBUG else False
 CORS_ALLOWED_ORIGINS = (
     [
         "http://localhost:3000",
@@ -235,12 +232,13 @@ CORS_ALLOWED_ORIGINS = (
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://{os.environ.get('REDIS_HOST', 'localhost')}:6379/0",
+        "LOCATION": f"redis://{os.environ.get('REDIS_HOST', 'redis')}:{os.environ.get('REDIS_PORT', "6379")}/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },
     }
 }
+
 
 # Session configuration
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
@@ -299,27 +297,27 @@ LOGGING = {
 # Django-Q2 Configuration
 # -------------------------------------
 Q_CLUSTER = {
-    'name': 'skillforge',
-    'workers': 4,  # Number of workers
-    'recycle': 500,  # Recycle workers after this many tasks
-    'timeout': 60,  # Task timeout in seconds
-    'compress': True,  # Compress task data
-    'save_limit': 250,  # Number of successful tasks to keep in database
-    'queue_limit': 500,  # Maximum number of tasks in queue
-    'cpu_affinity': 1,  # CPU affinity for workers
-    'label': 'Django Q2',  # Label for the cluster
-    'redis': {
-        'host': os.environ.get('REDIS_HOST', 'redis'),
-        'port': int(os.environ.get('REDIS_PORT', 6379)),
-        'db': 0,
-        'password': os.environ.get('REDIS_PASSWORD', None),
+    "name": "skillforge",
+    "workers": 4,  # Number of workers
+    "recycle": 500,  # Recycle workers after this many tasks
+    "timeout": 60,  # Task timeout in seconds
+    "compress": True,  # Compress task data
+    "save_limit": 250,  # Number of successful tasks to keep in database
+    "queue_limit": 500,  # Maximum number of tasks in queue
+    "cpu_affinity": 1,  # CPU affinity for workers
+    "label": "Django Q2",  # Label for the cluster
+    "redis": {
+        "host": os.environ.get("REDIS_HOST", "redis"),
+        "port": int(os.environ.get("REDIS_PORT", 6379)),
+        "db": 0,
+        "password": os.environ.get("REDIS_PASSWORD", None),
     },
-    'orm': 'default',  # Use default database for task storage
-    'bulk': 10,  # Number of tasks to process at once
-    'sync': False,  # Run tasks asynchronously
-    'catch_up': True,  # Catch up on missed scheduled tasks
-    'retry': 120,  # Retry failed tasks after this many seconds
-    'max_attempts': 3,  # Maximum retry attempts
+    "orm": "default",  # Use default database for task storage
+    "bulk": 10,  # Number of tasks to process at once
+    "sync": False,  # Run tasks asynchronously
+    "catch_up": True,  # Catch up on missed scheduled tasks
+    "retry": 120,  # Retry failed tasks after this many seconds
+    "max_attempts": 3,  # Maximum retry attempts
 }
 
 # Cache Configuration (using Redis)
@@ -329,6 +327,6 @@ CACHES = {
         "LOCATION": f"redis://{os.environ.get('REDIS_HOST', 'redis')}:{os.environ.get('REDIS_PORT', 6379)}/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
+        },
     }
 }

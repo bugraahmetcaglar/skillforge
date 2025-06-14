@@ -2,9 +2,8 @@
 Django==5.2.2 - https://github.com/django/django
 
 # Task Queue
-django-rq==3.0.1  # https://github.com/rq/django-rq (Django 5.2 compatible)
-rq==2.0.0  # https://github.com/rq/rq
-rq-scheduler==0.14.0  # https://github.com/rq/rq-scheduler (for periodic tasks)
+django-q2==1.7.4
+redis==5.2.1
 
 # Django REST Framework
 djangorestframework==3.16.0  # https://github.com/encode/django-rest-framework
