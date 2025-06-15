@@ -46,6 +46,7 @@ class VCardImportService:
 
                 # Skip completely empty contacts
                 if not any(data.get(f) for f in ["first_name", "last_name", "full_name", "email", "mobile_phone"]):
+                    logger.error(f"Skipping empty contact {i+1}: {data = }")
                     failed_count += 1
                     continue
 
@@ -55,9 +56,10 @@ class VCardImportService:
                 )
 
                 Contact.objects.create(**data)
+                imported_count += 1
 
             except Exception as err:
-                logger.exception(f"Failed to save contact {i+1}: {err}")
+                logger.exception(f"Failed to save contact {i+1}: {data = }, {err = }")
                 failed_count += 1
                 errors.append(f"Contact {i+1}: {err}")
 
