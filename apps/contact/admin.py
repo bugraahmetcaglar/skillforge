@@ -59,7 +59,7 @@ class ContactAdmin(admin.ModelAdmin):
         from django.db import models
         from django.shortcuts import render
 
-        basic_stats = Contact.objects.filter(is_active=True).aggregate(
+        stats = Contact.objects.filter(is_active=True).aggregate(
             total_contacts=models.Count("id"),
             total_with_email=models.Count("id", filter=models.Q(email__isnull=False) & ~models.Q(email="")),
             total_with_phone=models.Count(
@@ -89,12 +89,13 @@ class ContactAdmin(admin.ModelAdmin):
 
         context = {
             "title": "Contact Analytics",
+            "duplicate_count": Contact.objects.duplicate_numbers(request.user).count(),
             "source_stats": source_stats,
             "org_stats": org_stats,
-            "total_contacts": basic_stats["total_contacts"],
-            "total_with_email": basic_stats["total_with_email"],
-            "total_with_phone": basic_stats["total_with_phone"],
-            "total_with_work_phone": basic_stats["total_with_work_phone"],
+            "total_contacts": stats["total_contacts"],
+            "total_with_email": stats["total_with_email"],
+            "total_with_phone": stats["total_with_phone"],
+            "total_with_work_phone": stats["total_with_work_phone"],
         }
 
         return render(request, "admin/contact/analytics.html", context)
