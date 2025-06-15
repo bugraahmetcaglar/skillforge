@@ -65,3 +65,11 @@ class ImportStatus(models.TextChoices):
     COMPLETED = "completed", "Completed"
     FAILED = "failed", "Failed"
 
+
+class Environment(BaseEnum):
+    """Environment choices for logging"""
+
+    DEVELOPMENT = "development"
+    STAGING = "staging"
+    PRODUCTION = "production"
+    TESTING = "testing"
