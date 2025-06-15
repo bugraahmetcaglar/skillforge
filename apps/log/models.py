@@ -63,6 +63,14 @@ class LogEntry(BaseModel):
 
         extra_context = extra_context or {}
 
+        exception_info = ""
+        if hasattr(record, "exc_text") and record.exc_text:
+            exception_info = record.exc_text
+        elif hasattr(record, "exc_info") and record.exc_info:
+            import traceback
+
+            exception_info = "".join(traceback.format_exception(*record.exc_info))
+
         return cls.objects.create(
             timestamp=datetime.fromtimestamp(record.created, tz=timezone.get_current_timezone()),
             level=record.levelname,
@@ -71,7 +79,7 @@ class LogEntry(BaseModel):
             module=getattr(record, "module", ""),
             function_name=getattr(record, "funcName", ""),
             line_number=getattr(record, "lineno", None),
-            exception_info=record.exc_text if hasattr(record, "exc_text") else "",
+            exception_info=exception_info,
             user_id=extra_context.get("user_id"),
             request_id=extra_context.get("request_id", ""),
             ip_address=extra_context.get("ip_address"),

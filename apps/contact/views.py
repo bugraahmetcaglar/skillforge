@@ -9,7 +9,12 @@ from rest_framework.response import Response
 
 from apps.contact.filter import ContactFilter
 from apps.contact.models import Contact
-from apps.contact.serializers import ContactDetailSerializer, ContactListSerializer, VCardImportSerializer
+from apps.contact.serializers import (
+    ContactDetailSerializer,
+    ContactListSerializer,
+    VCardImportSerializer,
+    ContactDuplicateSerializer,
+)
 from apps.contact.services.vcard_service import VCardImportService
 from core.permissions import IsOwnerOrAdmin
 from core.views import BaseAPIView, BaseListAPIView, BaseRetrieveAPIView
@@ -124,3 +129,17 @@ class ContactDetailAPIView(BaseRetrieveAPIView):
 
         except Contact.DoesNotExist:
             return self.error_response("Contact not found", status_code=status.HTTP_404_NOT_FOUND)
+
+
+class ContactDuplicateListAPIView(BaseListAPIView):
+    """Contact duplicate detection API using existing manager method"""
+
+    serializer_class = ContactDuplicateSerializer
+    permission_classes = [IsOwnerOrAdmin]
+
+    def get_queryset(self):
+        """Get duplicate contacts using Contact manager's duplicate_numbers method"""
+        logger.info(f"Fetching duplicate contacts for user {self.request.user.id}")
+
+        breakpoint()
+        return Contact.objects.duplicate_numbers(owner=self.request.user)
