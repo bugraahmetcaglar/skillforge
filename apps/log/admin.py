@@ -75,4 +75,4 @@ class LogEntryAdmin(admin.ModelAdmin):
             "logger_stats": logger_stats,
         }
 
-        return render(request, "admin/log/analytics.html", context)
+        return render(request, "admin/logentry/analytics.html", context)

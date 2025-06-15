@@ -135,10 +135,10 @@ class Contact(BaseModel):
         )
 
     @property
-    def display_name(self, obj: Contact) -> str:
+    def display_name(self) -> str:
         """Get formatted display name"""
-        if obj.first_name or obj.last_name:
-            return f"{obj.first_name or ''} {obj.middle_name or ''} {obj.last_name or ''}".strip()
+        if self.first_name or self.last_name:
+            return f"{self.first_name or ''} {self.middle_name or ''} {self.last_name or ''}".strip()
         return "Unknown Contact"
 
 
