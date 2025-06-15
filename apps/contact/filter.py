@@ -16,21 +16,50 @@ class ContactFilter(filters.FilterSet):
     last_name = filters.CharFilter(field_name="last_name", lookup_expr="icontains")
     full_name = filters.CharFilter(field_name="full_name", lookup_expr="icontains")
 
+    # Import source filter
+    import_source = filters.ChoiceFilter(choices=SourceTextChoices.choices)
+
     # Contact info filters
     email = filters.CharFilter(field_name="email", lookup_expr="icontains")
-    phone = filters.CharFilter(method="filter_phone", help_text="Search in any phone field")
+    mobile_phone = filters.CharFilter(field_name="mobile_phone", lookup_expr="icontains")
 
+    # Date filters
+    created_after = filters.DateTimeFilter(field_name="created_at", lookup_expr="gte")
+    created_before = filters.DateTimeFilter(field_name="created_at", lookup_expr="lte")
+
+    def filter_search(self, queryset, name, value):
+        if not value:
+            return queryset
+        # Filter by first name, middle name, last name, or mobile phone
+        return queryset.filter(
+            Q(first_name__icontains=value)
+            | Q(middle_name__icontains=value)
+            | Q(last_name__icontains=value)
+            | Q(mobile_phone__icontains=value)
+        ).distinct()
+
+    class Meta:
+        model = Contact
+        fields = [
+            "search",
+            "first_name",
+            "last_name",
+            "full_name",
+            "import_source",
+            "email",
+            "mobile_phone",
+            "created_after",
+            "created_before",
+        ]
+
+
+class ContactListFilter(ContactFilter):
     # Organization filters
     organization = filters.CharFilter(field_name="organization", lookup_expr="icontains")
     job_title = filters.CharFilter(field_name="job_title", lookup_expr="icontains")
     department = filters.CharFilter(field_name="department", lookup_expr="icontains")
 
-    # Import source filter
-    import_source = filters.ChoiceFilter(choices=SourceTextChoices.choices)
-
     # Date filters
-    created_after = filters.DateTimeFilter(field_name="created_at", lookup_expr="gte")
-    created_before = filters.DateTimeFilter(field_name="created_at", lookup_expr="lte")
     imported_after = filters.DateTimeFilter(field_name="imported_at", lookup_expr="gte")
     imported_before = filters.DateTimeFilter(field_name="imported_at", lookup_expr="lte")
 
@@ -44,7 +73,26 @@ class ContactFilter(filters.FilterSet):
 
     class Meta:
         model = Contact
-        fields = []
+        fields = [
+            "search",
+            "first_name",
+            "last_name",
+            "full_name",
+            "import_source",
+            "email",
+            "mobile_phone",
+            "organization",
+            "job_title",
+            "department",
+            "created_after",
+            "created_before",
+            "imported_after",
+            "imported_before",
+            "has_birthday",
+            "birthday_month",
+            "birthday_day",
+            "tags",
+        ]
 
     def filter_search(self, queryset, name, value):
         if not value:
@@ -53,6 +101,7 @@ class ContactFilter(filters.FilterSet):
         return queryset.filter(
             Q(first_name__icontains=value)
             | Q(last_name__icontains=value)
+            | Q(middle_name__icontains=value)
             | Q(full_name__icontains=value)
             | Q(nickname__icontains=value)
             | Q(email__icontains=value)
@@ -65,17 +114,21 @@ class ContactFilter(filters.FilterSet):
             | Q(notes__icontains=value)
         ).distinct()
 
-    def filter_phone(self, queryset, name, value):
-        if not value:
-            return queryset
-
-        return queryset.filter(
-            Q(mobile_phone__icontains=value)
-            | Q(home_phone__icontains=value)
-            | Q(work_phone__icontains=value)
-            | Q(second_phone__icontains=value)
-            | Q(third_phone__icontains=value)
-        ).distinct()
-
     def filter_tags(self, queryset, name, value):
         return queryset.filter(tags__icontains=value) if value else queryset
+
+
+class ContactDuplicateFilter(ContactFilter):
+    """Filter for finding duplicate contacts based on name and phone"""
+
+    class Meta:
+        model = Contact
+        fields = [
+            "search",
+            "first_name",
+            "last_name",
+            "full_name",
+            "mobile_phone",
+            "email",
+            "import_source",
+        ]

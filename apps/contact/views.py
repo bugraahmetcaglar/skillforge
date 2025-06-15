@@ -7,7 +7,7 @@ from rest_framework import filters
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from apps.contact.filter import ContactFilter
+from apps.contact.filter import ContactDuplicateFilter, ContactFilter
 from apps.contact.models import Contact
 from apps.contact.serializers import (
     ContactDetailSerializer,
@@ -70,9 +70,9 @@ class ContactListAPIView(BaseListAPIView):
     - ordering: Sort by fields (created_at, first_name, last_name, etc.)
 
     Example URLs:
-    - /api/v1/contact/list/?search=john
-    - /api/v1/contact/list/?organization=google&has_birthday=true
-    - /api/v1/contact/list/?created_after=2024-01-01&ordering=-created_at
+    - /api/v1/contact/list?search=john
+    - /api/v1/contact/list?organization=google&has_birthday=true
+    - /api/v1/contact/list?created_after=2024-01-01&ordering=-created_at
     """
 
     serializer_class = ContactListSerializer
@@ -136,6 +136,8 @@ class ContactDuplicateListAPIView(BaseListAPIView):
 
     serializer_class = ContactDuplicateSerializer
     permission_classes = [IsOwnerOrAdmin]
+    filterset_class = ContactDuplicateFilter
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
 
     def get_queryset(self):
         """Get duplicate contacts using Contact manager's duplicate_numbers method"""
