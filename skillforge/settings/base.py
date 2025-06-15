@@ -112,9 +112,6 @@ DATABASES = {
     },
 }
 
-# Database Router
-DATABASE_ROUTERS = ["core.db_router.DatabaseRouter"]
-
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS = [
@@ -266,9 +263,9 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "simple",
         },
-        "mongodb": {
+        "database": {
             "level": "INFO",
-            "class": "apps.log.handlers.MongoDBLogHandler",
+            "class": "apps.log.handlers.DatabaseLogHandler",
         },
     },
     "root": {
@@ -277,17 +274,17 @@ LOGGING = {
     },
     "loggers": {
         "django": {
-            "handlers": ["console", "mongodb"],
+            "handlers": ["console", "database"],
             "level": "INFO",
             "propagate": False,
         },
         "apps": {
-            "handlers": ["console", "mongodb"],
+            "handlers": ["console", "database"],
             "level": "DEBUG",
             "propagate": False,
         },
         "core": {
-            "handlers": ["console", "mongodb"],
+            "handlers": ["console", "database"],
             "level": "DEBUG",
             "propagate": False,
         },

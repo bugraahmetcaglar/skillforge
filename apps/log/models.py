@@ -7,6 +7,7 @@ from django.utils import timezone
 from typing import Dict
 
 from apps.log.enums import LogLevel
+from apps.user.models import User
 from core.enums import Environment
 from core.models import BaseModel
 
@@ -14,30 +15,43 @@ logger = logging.getLogger(__name__)
 
 
 class LogEntry(BaseModel):
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    # Core log fields
+    timestamp = models.DateTimeField(default=timezone.now, db_index=True)
     level = models.CharField(max_length=20, choices=LogLevel.choices(), db_index=True)
     message = models.TextField()
     logger_name = models.CharField(max_length=100, db_index=True)
-    module = models.CharField(max_length=100, null=True, blank=True)
-    function = models.CharField(max_length=100, null=True, blank=True)
-    line_number = models.IntegerField(null=True, blank=True)
 
-    extra_data = models.JSONField(default=dict, blank=True)
+    # Location info
+    module = models.CharField(max_length=100, blank=True)
+    function_name = models.CharField(max_length=100, blank=True)
+    line_number = models.PositiveIntegerField(null=True, blank=True)
 
-    user_id = models.CharField(max_length=26, null=True, blank=True, db_index=True)
+    # Request context
+    user = models.ForeignKey(
+        "user.User", null=True, blank=True, on_delete=models.DO_NOTHING, related_name="log_entries"
+    )
+    request_id = models.CharField(max_length=36, blank=True, db_index=True)  # UUID
     ip_address = models.GenericIPAddressField(null=True, blank=True)
-    user_agent = models.CharField(max_length=500, null=True, blank=True)
-    request_path = models.CharField(max_length=500, null=True, blank=True)
-    request_method = models.CharField(max_length=10, null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+    request_method = models.CharField(max_length=10, blank=True)
+    request_path = models.CharField(max_length=500, blank=True, db_index=True)
 
-    class Meta:
-        ordering = ["-created_at"]
-        indexes = [
-            models.Index(fields=["level", "created_at"]),
-            models.Index(fields=["logger_name", "created_at"]),
-            models.Index(fields=["user_id", "created_at"]),
-        ]
-        verbose_name = "Log Entry"
-        verbose_name_plural = "Log Entries"
+    # Performance metrics
+    response_time_ms = models.PositiveIntegerField(null=True, blank=True, db_index=True)
+    status_code = models.PositiveIntegerField(null=True, blank=True, db_index=True)
+
+    # App context
+    app_name = models.CharField(max_length=50, default="skillforge", db_index=True)
+    environment = models.CharField(
+        max_length=20, choices=Environment.choices(), default=Environment.DEVELOPMENT.value, db_index=True
+    )
+
+    # Additional data (JSON)
+    extra_data = models.JSONField(default=dict, blank=True)
+    exception_info = models.TextField(blank=True)
 
     def __str__(self) -> str:
         return f"{self.level} - {self.logger_name} - {self.message[:50]}"

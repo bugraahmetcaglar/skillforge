@@ -31,9 +31,10 @@ class VCardImportService:
             contacts = parser.parse(content)
             return self._save_contacts(contacts)
         except UnicodeDecodeError:
+            logger.exception("Failed to decode vCard file, trying alternative encoding")
             raise ValueError("Invalid file encoding")
         except Exception as e:
-            logger.error(f"Import error: {e}")
+            logger.exception(f"Import error: {e}")
             raise ValueError(f"Import failed: {e}")
 
     def _save_contacts(self, contacts: list[dict]) -> dict[str, Any]:
@@ -84,7 +85,8 @@ class VCardParser:
                 contact = self._extract_data(vcard)
                 if contact:
                     contacts.append(contact)
-            except Exception:
+            except Exception as err:
+                logger.warning(f"Failed to parse vCard block: {err}, 'block': {block}")
                 contact = self._parse_manual(block)
                 if contact:
                     contacts.append(contact)

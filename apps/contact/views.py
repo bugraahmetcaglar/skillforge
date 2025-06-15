@@ -78,6 +78,7 @@ class ContactListAPIView(BaseListAPIView):
     ordering_fields = ["created_at", "first_name", "last_name", "organization", "imported_at"]
 
     def get_queryset(self):
+        logger.info(f"Fetching contacts for user {self.request.user.id}")
         return Contact.objects.filter(owner=self.request.user, is_active=True).select_related("owner")
 
 
