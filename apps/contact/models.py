@@ -2,13 +2,34 @@ from __future__ import annotations
 
 from django.forms.models import model_to_dict
 from django.db import models
-from django.db.models import Q
+from django.db.models.functions import RowNumber
 from django.utils import timezone as django_timezone
 
 from core.enums import SourceTextChoices
 from core.fields import NullableCharField
 from core.models import BaseModel
 from apps.user.models import User
+
+
+class ContactManager(models.Manager):
+    def duplicate_numbers(self, owner):
+        """Find duplicate phone numbers with details"""
+
+        return (
+            self.objects.filter(owner=owner, is_active=True, mobile_phone__isnull=False)
+            .exclude(mobile_phone="")
+            .annotate(
+                # Count duplicates for each mobile phone number
+                phone_count=models.Window(expression=models.Count("mobile_phone"), partition_by=["mobile_phone"]),
+                # Rank by creation date (1 = primary/oldest)
+                contact_rank=models.Window(
+                    expression=RowNumber(), partition_by=["mobile_phone"], order_by=["-created_at"]
+                ),
+            )
+            .filter(phone_count__gt=1)
+            .values("mobile_phone", "contact_rank", "id", "first_name", "last_name", "created_at")
+            .order_by("-created_at")
+        )
 
 
 class Contact(BaseModel):
@@ -69,6 +90,8 @@ class Contact(BaseModel):
 
     deactivated_at = models.DateTimeField(blank=True, null=True)
 
+    objects = ContactManager()
+
     class Meta:
         unique_together = [["owner", "external_id", "import_source"]]
         ordering = ["first_name", "last_name"]
@@ -95,10 +118,10 @@ class Contact(BaseModel):
             owner=owner,
             is_active=True,
         ).filter(
-            Q(first_name__icontains=keyword)
-            | Q(last_name__icontains=keyword)
-            | Q(email__icontains=keyword)
-            | Q(mobile_phone__icontains=keyword)
+            models.Q(first_name__icontains=keyword)
+            | models.Q(last_name__icontains=keyword)
+            | models.Q(email__icontains=keyword)
+            | models.Q(mobile_phone__icontains=keyword)
         )
 
 
