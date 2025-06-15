@@ -6,10 +6,10 @@ import quopri
 from typing import Any
 from vobject.base import readOne as vobject_readOne
 
+from apps.contact.enums import SourceEnum
 from apps.contact.models import Contact
 from apps.contact.utils import generate_external_id, normalize_phone_number
 from apps.user.models import User
-from core.enums import SourceEnum
 from core.utils import recursive_getattr
 
 logger = logging.getLogger(__name__)
@@ -31,9 +31,10 @@ class VCardImportService:
             contacts = parser.parse(content)
             return self._save_contacts(contacts)
         except UnicodeDecodeError:
+            logger.exception("Failed to decode vCard file, trying alternative encoding")
             raise ValueError("Invalid file encoding")
         except Exception as e:
-            logger.error(f"Import error: {e}")
+            logger.exception(f"Import error: {e}")
             raise ValueError(f"Import failed: {e}")
 
     def _save_contacts(self, contacts: list[dict]) -> dict[str, Any]:
@@ -46,6 +47,7 @@ class VCardImportService:
 
                 # Skip completely empty contacts
                 if not any(data.get(f) for f in ["first_name", "last_name", "full_name", "email", "mobile_phone"]):
+                    logger.error(f"Skipping empty contact {i+1}: {data = }")
                     failed_count += 1
                     continue
 
@@ -55,9 +57,10 @@ class VCardImportService:
                 )
 
                 Contact.objects.create(**data)
+                imported_count += 1
 
             except Exception as err:
-                logger.exception(f"Failed to save contact {i+1}: {err}")
+                logger.exception(f"Failed to save contact {i+1}: {data = }, {err = }")
                 failed_count += 1
                 errors.append(f"Contact {i+1}: {err}")
 
@@ -82,7 +85,8 @@ class VCardParser:
                 contact = self._extract_data(vcard)
                 if contact:
                     contacts.append(contact)
-            except Exception:
+            except Exception as err:
+                logger.warning(f"Failed to parse vCard block: {err}, 'block': {block}")
                 contact = self._parse_manual(block)
                 if contact:
                     contacts.append(contact)

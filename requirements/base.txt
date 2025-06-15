@@ -1,10 +1,9 @@
 # Django and Core Framework
-Django==5.2.2  # Latest LTS - https://github.com/django/django
+Django==5.2.2 - https://github.com/django/django
 
-# Task Queue (RQ instead of Celery)
-django-rq==3.0.1  # https://github.com/rq/django-rq (Django 5.2 compatible)
-rq==2.0.0  # https://github.com/rq/rq
-rq-scheduler==0.14.0  # https://github.com/rq/rq-scheduler (for periodic tasks)
+# Task Queue
+django-q2==1.8.0
+redis==5.2.1
 
 # Django REST Framework
 djangorestframework==3.16.0  # https://github.com/encode/django-rest-framework
@@ -24,6 +23,10 @@ redis==5.2.1  # https://github.com/redis/redis-py
 PyYAML==6.0.2  # https://github.com/yaml/pyyaml
 requests==2.32.4  # https://github.com/psf/requests
 
+# Logging
+python-json-logger==3.3.0  # JSON formatted logs
+structlog==24.1.0  # Structured logging
+
 # ULID
 python-ulid==3.0.0
 
@@ -41,5 +44,6 @@ django-coverage-plugin==3.1.0  # https://github.com/nedbat/django_coverage_plugi
 # Mock
 requests-mock==1.12.1  # https://github.com/jamielennox/requests-mock
 
-# vObject - vCard processing
-vobject==0.9.9
+# vObject
+# ------------------------------------------------------------------------------
+vobject==0.9.6.1

@@ -67,3 +67,24 @@ def recursive_getattr(obj: Any, attr_path: str, default: Any = None) -> Any:
 
     except (AttributeError, TypeError):
         return default
+
+
+def multi_pop(dictionary: dict, *keys: str, default: Any = None) -> list[Any]:
+    """Pop multiple keys from a dictionary in one call.
+
+    Args:
+        dictionary: The dictionary to pop from
+        *keys: Variable number of keys to pop
+        default: Default value if key doesn't exist
+
+    Returns:
+        List of popped values
+
+    Examples:
+        >>> data = {"a": 1, "b": 2, "c": 3, "d": 4}
+        >>> multi_pop(data, "a", "c", "x")
+        [1, 3, None]
+        >>> print(data)
+        {"b": 2, "d": 4}
+    """
+    return [dictionary.pop(key, default) for key in keys]

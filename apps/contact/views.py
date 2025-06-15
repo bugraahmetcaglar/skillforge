@@ -7,9 +7,14 @@ from rest_framework import filters
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from apps.contact.filter import ContactFilter
+from apps.contact.filter import ContactDuplicateFilter, ContactFilter
 from apps.contact.models import Contact
-from apps.contact.serializers import ContactDetailSerializer, ContactListSerializer, VCardImportSerializer
+from apps.contact.serializers import (
+    ContactDetailSerializer,
+    ContactListSerializer,
+    VCardImportSerializer,
+    ContactDuplicateSerializer,
+)
 from apps.contact.services.vcard_service import VCardImportService
 from core.permissions import IsOwnerOrAdmin
 from core.views import BaseAPIView, BaseListAPIView, BaseRetrieveAPIView
@@ -65,9 +70,9 @@ class ContactListAPIView(BaseListAPIView):
     - ordering: Sort by fields (created_at, first_name, last_name, etc.)
 
     Example URLs:
-    - /api/v1/contact/list/?search=john
-    - /api/v1/contact/list/?organization=google&has_birthday=true
-    - /api/v1/contact/list/?created_after=2024-01-01&ordering=-created_at
+    - /api/v1/contact/list?search=john
+    - /api/v1/contact/list?organization=google&has_birthday=true
+    - /api/v1/contact/list?created_after=2024-01-01&ordering=-created_at
     """
 
     serializer_class = ContactListSerializer
@@ -78,6 +83,7 @@ class ContactListAPIView(BaseListAPIView):
     ordering_fields = ["created_at", "first_name", "last_name", "organization", "imported_at"]
 
     def get_queryset(self):
+        logger.info(f"Fetching contacts for user {self.request.user.id}")
         return Contact.objects.filter(owner=self.request.user, is_active=True).select_related("owner")
 
 
@@ -123,3 +129,19 @@ class ContactDetailAPIView(BaseRetrieveAPIView):
 
         except Contact.DoesNotExist:
             return self.error_response("Contact not found", status_code=status.HTTP_404_NOT_FOUND)
+
+
+class ContactDuplicateListAPIView(BaseListAPIView):
+    """Contact duplicate detection API using existing manager method"""
+
+    serializer_class = ContactDuplicateSerializer
+    permission_classes = [IsOwnerOrAdmin]
+    filterset_class = ContactDuplicateFilter
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+
+    def get_queryset(self):
+        """Get duplicate contacts using Contact manager's duplicate_numbers method"""
+        logger.info(f"Fetching duplicate contacts for user {self.request.user.id}")
+
+        breakpoint()
+        return Contact.objects.duplicate_numbers(owner=self.request.user)

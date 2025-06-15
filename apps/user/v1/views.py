@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import logging
+
 from django.contrib.auth import authenticate
-from django.db.models import Q
 from rest_framework import status, permissions
 from rest_framework.views import APIView
 from rest_framework.exceptions import AuthenticationFailed
@@ -11,6 +12,8 @@ from rest_framework.request import Request
 from apps.user.models import User
 from apps.user.serializers import UserLoginSerializer, UserSerializer, TokenSerializer
 from core import views
+
+logger = logging.getLogger(__name__)
 
 
 class UserRegisterAPIView(views.BaseAPIView):
@@ -52,8 +55,9 @@ class UserLoginAPIView(views.BaseCreateAPIView):
         username = serializer.validated_data["username"]
         password = serializer.validated_data["password"]
 
-        user = authenticate(request=request ,username=username, password=password)
+        user = authenticate(request=request, username=username, password=password)
         if not user:
+            logger.error(f"Authentication failed for user: {username}")
             raise AuthenticationFailed("Invalid credentials.")
 
         return self.success_response(data=user.token())

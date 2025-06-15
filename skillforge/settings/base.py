@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DEBUG")
+DEBUG = os.environ.get("DEBUG", False)
 
 ALLOWED_HOSTS = ["*"]
 
@@ -47,6 +47,7 @@ LOCAL_APPS = [
     "core",
     "apps.user",
     "apps.contact",
+    "apps.log",
 ]
 
 THIRD_PARTY_APPS = [
@@ -55,8 +56,6 @@ THIRD_PARTY_APPS = [
     "django_filters",
     "drf_yasg",
     "corsheaders",
-    "django_celery_beat",
-    "django_celery_results",
     "django_redis",
     "django_q",
 ]
@@ -105,16 +104,12 @@ WSGI_APPLICATION = "skillforge.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("DB_NAME"),
-        "USER": os.environ.get("DB_USER"),
-        "PASSWORD": os.environ.get("DB_PASSWORD"),
-        "HOST": os.environ.get("DB_HOST"),
-        "PORT": os.environ.get("DB_PORT"),
-        "OPTIONS": {
-            # psycopg3 specific options
-            "options": "-c default_transaction_isolation=read committed"
-        },
-    }
+        "NAME": os.environ.get("DB_NAME", "skillforge-dev"),
+        "USER": os.environ.get("DB_USER", "skillforge"),
+        "PASSWORD": os.environ.get("DB_PASSWORD", "skillforge"),
+        "HOST": os.environ.get("DB_HOST", "db"),
+        "PORT": os.environ.get("DB_PORT", "5432"),
+    },
 }
 
 # Password validation
@@ -194,7 +189,7 @@ SIMPLE_JWT = {
 
 # CORS Configuration
 # https://github.com/adamchainz/django-cors-headers
-CORS_ALLOW_ALL_ORIGINS = DEBUG
+CORS_ALLOW_ALL_ORIGINS = True if DEBUG else False
 CORS_ALLOWED_ORIGINS = (
     [
         "http://localhost:3000",
@@ -211,19 +206,44 @@ CORS_ALLOWED_ORIGINS = (
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://{os.environ.get('REDIS_HOST', 'localhost')}:6379/0",
+        "LOCATION": f"redis://{os.environ.get('REDIS_HOST', 'redis')}:{os.environ.get('REDIS_PORT', "6379")}/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },
     }
 }
 
+
 # Session configuration
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
 
-# Logging Configuration
-# https://docs.djangoproject.com/en/5.2/topics/logging/
+# Django-Q2 Configuration
+# -------------------------------------
+Q_CLUSTER = {
+    "name": "skillforge",
+    "workers": 4,  # Number of workers
+    "recycle": 500,  # Recycle workers after this many tasks
+    "timeout": 60,  # Task timeout in seconds
+    "compress": True,  # Compress task data
+    "save_limit": 250,  # Number of successful tasks to keep in database
+    "queue_limit": 500,  # Maximum number of tasks in queue
+    "cpu_affinity": 1,  # CPU affinity for workers
+    "label": "Django Q2",  # Label for the cluster
+    "redis": {
+        "host": os.environ.get("REDIS_HOST", "redis"),
+        "port": int(os.environ.get("REDIS_PORT", 6379)),
+        "db": 0,
+        "password": os.environ.get("REDIS_PASSWORD", None),
+    },
+    "orm": "default",  # Use default database for task storage
+    "bulk": 10,  # Number of tasks to process at once
+    "sync": False,  # Run tasks asynchronously
+    "catch_up": True,  # Catch up on missed scheduled tasks
+    "retry": 120,  # Retry failed tasks after this many seconds
+    "max_attempts": 3,  # Maximum retry attempts
+}
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -238,16 +258,14 @@ LOGGING = {
         },
     },
     "handlers": {
-        "file": {
-            "level": "INFO",
-            "class": "logging.FileHandler",
-            "filename": BASE_DIR / "logs" / "django.log",
-            "formatter": "verbose",
-        },
         "console": {
             "level": "DEBUG",
             "class": "logging.StreamHandler",
             "formatter": "simple",
+        },
+        "database": {
+            "level": "INFO",
+            "class": "apps.log.handlers.DatabaseLogHandler",
         },
     },
     "root": {
@@ -256,51 +274,19 @@ LOGGING = {
     },
     "loggers": {
         "django": {
-            "handlers": ["file", "console"],
+            "handlers": ["console", "database"],
             "level": "INFO",
             "propagate": False,
         },
         "apps": {
-            "handlers": ["file", "console"],
+            "handlers": ["console", "database"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+        "core": {
+            "handlers": ["console", "database"],
             "level": "DEBUG",
             "propagate": False,
         },
     },
-}
-
-# Django-Q2 Configuration
-# -------------------------------------
-Q_CLUSTER = {
-    'name': 'skillforge',
-    'workers': 4,  # Number of workers
-    'recycle': 500,  # Recycle workers after this many tasks
-    'timeout': 60,  # Task timeout in seconds
-    'compress': True,  # Compress task data
-    'save_limit': 250,  # Number of successful tasks to keep in database
-    'queue_limit': 500,  # Maximum number of tasks in queue
-    'cpu_affinity': 1,  # CPU affinity for workers
-    'label': 'Django Q2',  # Label for the cluster
-    'redis': {
-        'host': os.environ.get('REDIS_HOST', 'redis'),
-        'port': int(os.environ.get('REDIS_PORT', 6379)),
-        'db': 0,
-        'password': os.environ.get('REDIS_PASSWORD', None),
-    },
-    'orm': 'default',  # Use default database for task storage
-    'bulk': 10,  # Number of tasks to process at once
-    'sync': False,  # Run tasks asynchronously
-    'catch_up': True,  # Catch up on missed scheduled tasks
-    'retry': 120,  # Retry failed tasks after this many seconds
-    'max_attempts': 3,  # Maximum retry attempts
-}
-
-# Cache Configuration (using Redis)
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://{os.environ.get('REDIS_HOST', 'redis')}:{os.environ.get('REDIS_PORT', 6379)}/1",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
-    }
 }

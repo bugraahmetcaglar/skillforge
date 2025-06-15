@@ -38,7 +38,7 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    # path("admin/", include("apps.admin.urls", namespace="admin")),
+    path("admin/", admin.site.urls),
     # API endpoints
     path("api/v1/user/", include("apps.user.v1.urls")),
     path("api/v2/", include("apps.user.v2.urls")),
@@ -51,6 +51,7 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     try:
         import debug_toolbar
 
