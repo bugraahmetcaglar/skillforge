@@ -101,14 +101,6 @@ WSGI_APPLICATION = "skillforge.wsgi.application"
 
 # Database - Updated for psycopg3
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-# MongoDB Configuration
-MONGO_HOST = os.environ.get("MONGO_HOST", "mongodb://mongodb:27017/")
-MONGO_DB_NAME = os.environ.get("MONGO_DB_NAME", "skillforge_logs")
-MONGO_USER = os.environ.get("MONGO_USER", "skillforge")
-MONGO_PASSWORD = os.environ.get("MONGO_PASSWORD", "skillforge")
-MONGO_AUTH_SOURCE = os.environ.get("MONGO_AUTH_SOURCE", "admin")
-
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -117,26 +109,11 @@ DATABASES = {
         "PASSWORD": os.environ.get("DB_PASSWORD", "skillforge"),
         "HOST": os.environ.get("DB_HOST", "db"),
         "PORT": os.environ.get("DB_PORT", "5432"),
-    }
+    },
 }
 
-# MongoEngine Connection
-import mongoengine
-
-
-def setup_mongodb():
-    """Setup MongoDB connection"""
-    mongoengine.connect(
-        db=MONGO_DB_NAME,
-        host=MONGO_HOST,
-        username=MONGO_USER,
-        password=MONGO_PASSWORD,
-        authentication_source=MONGO_AUTH_SOURCE,
-    )
-
-
-setup_mongodb()
-
+# Database Router
+DATABASE_ROUTERS = ["core.db_router.DatabaseRouter"]
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -244,9 +221,32 @@ CACHES = {
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
 
-# Logging Configuration
-# https://docs.djangoproject.com/en/5.2/topics/logging/
-# Updated Logging Configuration - MongoDB only
+# Django-Q2 Configuration
+# -------------------------------------
+Q_CLUSTER = {
+    "name": "skillforge",
+    "workers": 4,  # Number of workers
+    "recycle": 500,  # Recycle workers after this many tasks
+    "timeout": 60,  # Task timeout in seconds
+    "compress": True,  # Compress task data
+    "save_limit": 250,  # Number of successful tasks to keep in database
+    "queue_limit": 500,  # Maximum number of tasks in queue
+    "cpu_affinity": 1,  # CPU affinity for workers
+    "label": "Django Q2",  # Label for the cluster
+    "redis": {
+        "host": os.environ.get("REDIS_HOST", "redis"),
+        "port": int(os.environ.get("REDIS_PORT", 6379)),
+        "db": 0,
+        "password": os.environ.get("REDIS_PASSWORD", None),
+    },
+    "orm": "default",  # Use default database for task storage
+    "bulk": 10,  # Number of tasks to process at once
+    "sync": False,  # Run tasks asynchronously
+    "catch_up": True,  # Catch up on missed scheduled tasks
+    "retry": 120,  # Retry failed tasks after this many seconds
+    "max_attempts": 3,  # Maximum retry attempts
+}
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -292,41 +292,4 @@ LOGGING = {
             "propagate": False,
         },
     },
-}
-
-# Django-Q2 Configuration
-# -------------------------------------
-Q_CLUSTER = {
-    "name": "skillforge",
-    "workers": 4,  # Number of workers
-    "recycle": 500,  # Recycle workers after this many tasks
-    "timeout": 60,  # Task timeout in seconds
-    "compress": True,  # Compress task data
-    "save_limit": 250,  # Number of successful tasks to keep in database
-    "queue_limit": 500,  # Maximum number of tasks in queue
-    "cpu_affinity": 1,  # CPU affinity for workers
-    "label": "Django Q2",  # Label for the cluster
-    "redis": {
-        "host": os.environ.get("REDIS_HOST", "redis"),
-        "port": int(os.environ.get("REDIS_PORT", 6379)),
-        "db": 0,
-        "password": os.environ.get("REDIS_PASSWORD", None),
-    },
-    "orm": "default",  # Use default database for task storage
-    "bulk": 10,  # Number of tasks to process at once
-    "sync": False,  # Run tasks asynchronously
-    "catch_up": True,  # Catch up on missed scheduled tasks
-    "retry": 120,  # Retry failed tasks after this many seconds
-    "max_attempts": 3,  # Maximum retry attempts
-}
-
-# Cache Configuration (using Redis)
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://{os.environ.get('REDIS_HOST', 'redis')}:{os.environ.get('REDIS_PORT', 6379)}/1",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        },
-    }
 }
