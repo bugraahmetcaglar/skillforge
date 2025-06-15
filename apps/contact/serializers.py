@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 from rest_framework import serializers
 
-from apps.contact.models import Contact
+from apps.contact.models import Contact, ContactBackup
 from core.views import BaseRetrieveAPIView
 
 
@@ -106,6 +106,17 @@ class ContactDetailSerializer(serializers.ModelSerializer):
 
         today = date.today()
         return today.year - obj.birthday.year - ((today.month, today.day) < (obj.birthday.month, obj.birthday.day))
+
+
+class ContactBackupCreateSerializer(serializers.ModelSerializer):
+    """ModelSerializer for creating new contacts"""
+
+    external_id = serializers.CharField(read_only=True)
+    import_source = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Contact
+        exclude = ["id", "owner"]
 
 
 class ContactDuplicateSerializer(serializers.ModelSerializer):

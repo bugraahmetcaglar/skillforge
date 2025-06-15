@@ -1,0 +1,30 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}Bulk Backup Contacts{% endblock %}
+
+{% block content %}
+<div style="margin: 20px;">
+    <div style="background: var(--primary); border: 1px solid var(--secondary); padding: 15px; border-radius: 5px; margin: 20px 0;">
+        <h3 style="margin: 0 0 10px 0;">⚠️ Confirmation Required</h3>
+        <p>You are about to create backup copies for <strong>{{ total_contacts }}</strong> active contacts.</p>
+        <p>This operation will:</p>
+        <ul>
+            <li>Create backup entries in the ContactBackup table</li>
+            <li><strong>NOT delete</strong> any existing contacts</li>
+            <li>Store complete contact data for future reference</li>
+        </ul>
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div style="margin: 20px 0;">
+            <button type="submit" style="background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">
+                ✅ Proceed with Backup
+            </button>
+            <a href="" style="background: #6c757d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                ❌ Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

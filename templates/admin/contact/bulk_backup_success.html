@@ -1,0 +1,23 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}Backup Complete{% endblock %}
+
+{% block content %}
+<div style="margin: 20px;">
+    <h1>✅ Backup Complete</h1>
+    
+    <div style="background: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 5px; margin: 20px 0;">
+        <h3 style="margin: 0 0 10px 0; color: #155724;">🎉 Success!</h3>
+        <p style="color: #155724;">Successfully created backup for <strong>{{ backup_count }}</strong> contacts.</p>
+    </div>
+    
+    <div style="margin: 20px 0;">
+        <a href="{% url 'admin:contact_contact_changelist' %}" style="background: #007cba; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-right: 10px;">
+            📋 Back to Contacts
+        </a>
+        <a href="{% url 'admin:contact_contactbackup_changelist' %}" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+            📁 View Backups
+        </a>
+    </div>
+</div>
+{% endblock %}

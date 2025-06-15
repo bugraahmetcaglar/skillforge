@@ -3,8 +3,13 @@
 {% block object-tools-items %}
     {{ block.super }}
     <li>
-        <a href="{{ analytics_url }}" class="btn" style="background: #007cba; color: white; padding: 8px 12px; text-decoration: none; border-radius: 3px;">
+        <a href="{% url 'admin:contact_contact_analytics' %}"  style="background: #007cba; color: white; padding: 8px 12px; text-decoration: none; border-radius: 3px;">
             📊 View Analytics
+        </a>
+    </li>
+    <li>
+        <a href="{% url 'admin:contact_contact_bulk_backup' %}" style="background: #28a745; color: white; padding: 8px 12px; text-decoration: none; border-radius: 3px;">
+            📁 Bulk Backup
         </a>
     </li>
 {% endblock %}
