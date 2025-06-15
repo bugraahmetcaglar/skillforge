@@ -15,7 +15,7 @@ class ContactManager(models.Manager):
     def duplicate_numbers(self, owner: User) -> models.QuerySet:
         """Find duplicate phone numbers with details"""
 
-        duplicate_numbers = (
+        return (
             self.filter(owner=owner, is_active=True, mobile_phone__isnull=False)
             .exclude(mobile_phone="")
             .annotate(
@@ -40,7 +40,6 @@ class ContactManager(models.Manager):
             )
             .order_by("-created_at")
         )
-        return duplicate_numbers
 
 
 class Contact(BaseModel):
