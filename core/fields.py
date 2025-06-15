@@ -7,11 +7,12 @@ class NullableCharField(models.CharField):
     def __init__(self, *args, **kwargs):
         max_length = kwargs.pop("max_length", 254)
         default = kwargs.pop("default", None)
-        super().__init__(max_length=max_length, default=default, null=True, *args, **kwargs)
+        super().__init__(max_length=max_length, default=default, null=True, blank=True, *args, **kwargs)
 
     def deconstruct(self):
         name, path, args, kwargs = super().deconstruct()
         del kwargs["null"]
+        del kwargs["blank"]
         return name, path, args, kwargs
 
 

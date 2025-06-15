@@ -21,11 +21,6 @@ class ContactAdminForm(forms.ModelForm):
         model = Contact
         exclude = ("owner", "external_id", "imported_at", "created_at", "last_updated")
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field_name, field in self.fields.items():
-            field.required = False
-
 
 @admin.register(Contact)
 class ContactAdmin(admin.ModelAdmin):
