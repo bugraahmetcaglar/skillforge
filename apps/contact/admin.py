@@ -10,7 +10,6 @@ from django.forms import model_to_dict
 from django.shortcuts import render
 
 from apps.contact.models import Contact, ContactBackup
-from core.utils import multi_pop
 
 logger = logging.getLogger(__name__)
 
