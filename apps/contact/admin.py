@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import logging
 
 from django import forms
@@ -118,24 +119,32 @@ class ContactAdmin(admin.ModelAdmin):
     def bulk_backup_view(self, request):
         """Custom admin action to create backups for selected contacts"""
         if request.method == "POST":
-            contacts = Contact.objects.filter(is_active=True)
-            backup_count, failed_count = 0, 0
+            contacts = Contact.objects.filter(is_active=True, owner=request.user).select_related("owner").order_by("id")
+            success_ids, fail_ids = [], []
 
             for contact in contacts:
                 try:
                     dict_contact = model_to_dict(contact)
-                    multi_pop(dict_contact, "id", "owner")
+                    contact_id = dict_contact.pop("id")
+                    owner_id = dict_contact.pop("owner")
 
-                    ContactBackup.objects.create(contact=contact, owner=contact.owner, contact_data=f"{dict_contact}")
-                    backup_count += 1
+                    for key, value in dict_contact.items():
+                        if isinstance(value, (datetime.datetime, datetime.date)):
+                            dict_contact[key] = value.isoformat()
+
+                    ContactBackup.objects.create(contact=contact, owner_id=owner_id, contact_data=dict_contact)
+                    success_ids.append(contact_id)
                 except Exception as err:
                     logger.exception(f"Error creating backups: {err}, Contact ID: {contact.id} data: {contact}")
-                    messages.error(request, f"Failed to create backups, Contact ID: {contact.id}")
-                    failed_count += 1
+                    fail_ids.append(contact.id)
                     continue
 
-            messages.success(request, f"Successfully created backup for {backup_count} contacts")
-            return render(request, "admin/contact/bulk_backup_success.html", {"backup_count": backup_count})
+            if success_ids:
+                messages.success(request, f"Successfully created backup for Contact IDs: {success_ids}")
+            if fail_ids:
+                messages.error(request, f"Failed to create backups, Contact IDs: {fail_ids}")
+
+            return render(request, "admin/contact/bulk_backup_success.html", {"backup_count": len(success_ids)})
 
         # Show confirmation page
         total_contacts = Contact.objects.filter(is_active=True).count()
