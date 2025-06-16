@@ -9,26 +9,6 @@ from django.shortcuts import render
 from django.urls import path
 
 from apps.log.models import LogEntry
-from core.utils import recursive_getattr
-
-
-class LogAnalyticsAdmin(admin.ModelAdmin):
-    """Dummy admin for creating menu item"""
-
-    def has_module_permission(self, request):
-        return recursive_getattr(request, "user.is_superuser", False)
-
-    def has_view_permission(self, request, obj=None):
-        return recursive_getattr(request, "user.is_superuser", False)
-
-    def has_add_permission(self, request):
-        return False
-
-    def has_change_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
 
 
 @admin.register(LogEntry)
