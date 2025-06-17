@@ -48,6 +48,7 @@ LOCAL_APPS = [
     "apps.user",
     "apps.contact",
     "apps.log",
+    "apps.reminder",
 ]
 
 THIRD_PARTY_APPS = [
@@ -290,3 +291,6 @@ LOGGING = {
         },
     },
 }
+
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
