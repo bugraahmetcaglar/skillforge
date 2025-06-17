@@ -158,23 +158,30 @@ class ContactBackup(BaseModel):
         on_delete=models.CASCADE,
         related_name="contact_backups",
     )
-    contact_data = models.JSONField(default=list, blank=True)
+    contact_data = models.JSONField(default=dict, blank=True)
     is_active = models.BooleanField(default=True)
 
     class Meta:
         ordering = ["-created_at"]
+
+    def get_field(self, field_name: str,):
+        """Get specific field from contact data"""
+        return self.contact_data.get(field_name)
 
     def delete(self) -> bool:
         self.is_active = False
         self.save(update_fields=["is_active", "last_updated"])
         return True
 
-    def restore(self) -> Contact:
-        """Restore the contact from backup."""
-        self.contact.is_active = True
-        self.contact.save(update_fields=["is_active", "last_updated"])
+    def restore(self):
+        """Restore the contact from backup"""
 
-        # Mark the backup as inactive
-        self.delete()
+        if self.contact:
+            self.contact.is_active = True
+            self.contact.save(update_fields=["is_active", "last_updated"])
 
-        return self.contact
+            self.is_active = False
+            self.save(update_fields=["is_active", "last_updated"])
+            return self.contact
+        else:
+            Contact.objects.create(owner=self.owner, **model_to_dict(self))
