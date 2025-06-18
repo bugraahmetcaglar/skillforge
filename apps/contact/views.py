@@ -15,7 +15,7 @@ from apps.contact.serializers import (
     VCardImportSerializer,
     ContactDuplicateSerializer,
 )
-from apps.contact.services.vcard_service import VCardImportService
+from apps.contact.services import VCardImportService
 from core.permissions import IsOwnerOrAdmin
 from core.views import BaseAPIView, BaseListAPIView, BaseRetrieveAPIView
 
