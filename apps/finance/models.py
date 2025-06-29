@@ -4,9 +4,7 @@ from apps.finance.enums import (
     BillStatusChoices,
     BillTypeChoices,
     BillingCycleChoices,
-    SubscriptionServiceCategoryChoices,
     SubscriptionStatusChoices,
-    UsageFrequencyChoices,
 )
 from apps.user.models import User
 from core.enums import CurrencyChoices, PaymentMethodChoices
@@ -61,6 +59,9 @@ class SubscriptionService(BaseModel):
     free_trial_available = models.BooleanField(default=False)
 
     is_active = models.BooleanField(default=False, verbose_name="Is Active")
+
+    def __str__(self):
+        return self.name
 
     class Meta:
         verbose_name = "Subscription Service"
