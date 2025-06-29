@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import permissions
 
-from core.permissions import IsOwnerOrAdmin
+from core.permissions import IsOwner
 from apps.user.models import User
 from apps.user.serializers import TokenSerializer, UserSerializer, UserUpdateSerializer
 
@@ -34,7 +34,7 @@ class UserViewSet(viewsets.ModelViewSet):
         elif self.action == "list":
             permission_classes = (permissions.AllowAny,)
         elif self.action in ["update", "partial_update"]:
-            permission_classes = [IsOwnerOrAdmin]
+            permission_classes = [IsOwner]
         else:
             permission_classes = [permissions.IsAdminUser]
         return [permission() for permission in permission_classes]

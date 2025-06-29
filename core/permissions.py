@@ -28,3 +28,21 @@ class IsOwnerOrAdmin(permissions.BasePermission):
         except Exception as err:
             logger.exception(f"Permission check failed: {err}")
             return False
+
+
+class IsOwner(permissions.BasePermission):
+    """Custom permission to only allow owners of an object."""
+
+    def has_object_permission(self, request: Request, view, obj):
+        try:
+            user: User = request.user
+
+            if hasattr(obj, "user"):
+                return obj.user == user
+            elif hasattr(obj, "owner"):
+                return obj.owner == user
+
+            return obj == user
+        except Exception as err:
+            logger.exception(f"Permission check failed: {err}")
+            return False
