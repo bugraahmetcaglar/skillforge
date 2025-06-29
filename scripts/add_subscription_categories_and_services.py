@@ -64,46 +64,7 @@ def add_categories():
 def start():
     """Populate subscription services - Run from shell"""
 
-    categories = {
-        "Video Streaming": SubscriptionServiceCategory.objects.get(name="Video Streaming"),
-        "Music Streaming": SubscriptionServiceCategory.objects.get(name="Music Streaming"),
-        "Cloud Storage": SubscriptionServiceCategory.objects.get(name="Cloud Storage"),
-        "Productivity": SubscriptionServiceCategory.objects.get(name="Productivity"),
-        "Design": SubscriptionServiceCategory.objects.get(name="Design"),
-        "Development": SubscriptionServiceCategory.objects.get(name="Development"),
-        "Communication": SubscriptionServiceCategory.objects.get(name="Communication"),
-        "Education": SubscriptionServiceCategory.objects.get(name="Education"),
-        "Gaming": SubscriptionServiceCategory.objects.get(name="Gaming"),
-        "VPN & Security": SubscriptionServiceCategory.objects.get(name="VPN & Security"),
-        "News & Media": SubscriptionServiceCategory.objects.get(name="News & Media"),
-        "Health & Fitness": SubscriptionServiceCategory.objects.get(name="Health & Fitness"),
-        "E-commerce": SubscriptionServiceCategory.objects.get(name="E-commerce"),
-        "Finance": SubscriptionServiceCategory.objects.get(name="Finance"),
-        "Transportation": SubscriptionServiceCategory.objects.get(name="Transportation"),
-        "Dating": SubscriptionServiceCategory.objects.get(name="Dating"),
-        "AI Services": SubscriptionServiceCategory.objects.get(name="AI Services"),
-        "Travel": SubscriptionServiceCategory.objects.get(name="Travel"),
-        "Entertainment": SubscriptionServiceCategory.objects.get(name="Entertainment"),
-        "Newsletter": SubscriptionServiceCategory.objects.get(name="Newsletter"),
-        "Fitness": SubscriptionServiceCategory.objects.get(name="Fitness"),
-        "Gaming Services": SubscriptionServiceCategory.objects.get(name="Gaming Services"),
-        "Social Media": SubscriptionServiceCategory.objects.get(name="Social Media"),
-        "Shopping": SubscriptionServiceCategory.objects.get(name="Shopping"),
-        "News": SubscriptionServiceCategory.objects.get(name="News"),
-        "Music": SubscriptionServiceCategory.objects.get(name="Music"),
-        "Video": SubscriptionServiceCategory.objects.get(name="Video"),
-        "Books": SubscriptionServiceCategory.objects.get(name="Books"),
-        "Software": SubscriptionServiceCategory.objects.get(name="Software"),
-        "Hardware": SubscriptionServiceCategory.objects.get(name="Hardware"),
-        "Automation": SubscriptionServiceCategory.objects.get(name="Automation"),
-        "Marketing": SubscriptionServiceCategory.objects.get(name="Marketing"),
-        "Gaming Subscriptions": SubscriptionServiceCategory.objects.get(name="Gaming Subscriptions"),
-        "Cloud Services": SubscriptionServiceCategory.objects.get(name="Cloud Services"),
-        "Computer Programs": SubscriptionServiceCategory.objects.get(name="Computer Programs"),
-        "Mobile Apps": SubscriptionServiceCategory.objects.get(name="Mobile Apps"),
-        "Web Service": SubscriptionServiceCategory.objects.get(name="Web Service"),
-        "Other": SubscriptionServiceCategory.objects.get(name="Other"),
-    }
+    categories = {c.name: c for c in SubscriptionServiceCategory.objects.all()}
     services_data = [
         # Video Streaming
         {"name": "Netflix", "category": categories["Video Streaming"], "website_url": "https://netflix.com"},
