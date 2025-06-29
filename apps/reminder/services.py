@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 def send_telegram_message(message: str, chat_id: str | None = None) -> bool:
     """Send message to Telegram"""
     try:
-        token = settings.TELEGRAM_BOT_TOKEN
+        token = settings.TELEGRAM_REMINDER_BOT_TOKEN
         chat_id = chat_id or settings.TELEGRAM_CHAT_ID
 
         url = f"https://api.telegram.org/bot{token}/sendMessage"

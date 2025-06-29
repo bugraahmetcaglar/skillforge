@@ -5,7 +5,7 @@ from django.db import models
 from django.db.models.functions import RowNumber
 from django.utils import timezone as django_timezone
 
-from core.enums import SourceTextChoices
+from apps.contact.enums import SourceTextChoices
 from core.fields import NullableCharField
 from core.models import BaseModel
 from apps.user.models import User
@@ -159,7 +159,6 @@ class ContactBackup(BaseModel):
         related_name="contact_backups",
     )
     contact_data = models.JSONField(default=dict, blank=True)
-    is_active = models.BooleanField(default=True)
 
     class Meta:
         ordering = ["-created_at"]

@@ -134,8 +134,8 @@ class ContactAdmin(admin.ModelAdmin):
                     ContactBackup.objects.create(contact=contact, owner_id=owner_id, contact_data=dict_contact)
                     success_ids.append(contact_id)
                 except Exception as err:
-                    logger.exception(f"Error creating backups: {err}, Contact ID: {contact.id} data: {contact}")
-                    fail_ids.append(contact.id)
+                    logger.exception(f"Error creating backups: {err}, Contact ID: {getattr(contact, "id", "Unknown")} data: {contact}")
+                    fail_ids.append(getattr(contact, "id", "Unknown"))
                     continue
 
             if success_ids:
