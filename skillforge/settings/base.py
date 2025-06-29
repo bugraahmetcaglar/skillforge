@@ -49,6 +49,7 @@ LOCAL_APPS = [
     "apps.contact",
     "apps.log",
     "apps.reminder",
+    "apps.finance",
 ]
 
 THIRD_PARTY_APPS = [
