@@ -20,7 +20,7 @@ class SubscriptionServiceCategory(BaseModel):
     """
 
     name = models.CharField(max_length=100, unique=True, verbose_name="Category Name")
-    description = models.TextField(blank=True, verbose_name="Description")
+    description = models.TextField(null=True, blank=True, verbose_name="Description")
 
     class Meta:
         verbose_name = "Subscription Service Category"
@@ -36,8 +36,8 @@ class SubscriptionService(BaseModel):
     This model can be extended to create specific subscription types.
     """
 
-    name = models.CharField(max_length=255, verbose_name="Subscription Name")
-    description = models.TextField(blank=True, verbose_name="Description")
+    name = models.CharField(max_length=255, unique=True, verbose_name="Subscription Name")
+    description = models.TextField(null=True, blank=True, verbose_name="Description")
     category = models.ForeignKey(
         SubscriptionServiceCategory,
         null=True,
@@ -46,14 +46,16 @@ class SubscriptionService(BaseModel):
         related_name="subscription_services",
     )
 
-    logo_url = models.URLField(blank=True, verbose_name="Logo URL")
-    website_url = models.URLField(blank=True, verbose_name="Website URL")
+    logo_url = models.URLField(null=True, blank=True, verbose_name="Logo URL")
+    website_url = models.URLField(null=True, blank=True, verbose_name="Website URL")
 
     amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, verbose_name="Amount")
     currency = models.CharField(
         max_length=3, default=CurrencyChoices.TRY, choices=CurrencyChoices.choices, verbose_name="Currency"
     )
-    payment_method = models.CharField(max_length=50, blank=True, verbose_name="Payment Method")
+    payment_method = models.CharField(
+        max_length=50, choices=PaymentMethodChoices.choices, null=True, blank=True, verbose_name="Payment Method"
+    )
 
     free_trial_days = models.PositiveIntegerField(null=True, blank=True)
     free_trial_available = models.BooleanField(default=False)
