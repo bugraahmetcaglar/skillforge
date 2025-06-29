@@ -66,3 +66,39 @@ class SubscriptionService(BaseModel):
     class Meta:
         verbose_name = "Subscription Service"
         verbose_name_plural = "Subscription Services"
+
+
+class UserSubscription(BaseModel):
+    user = models.ForeignKey(User, on_delete=models.PROTECT, related_name="user_subscriptions")
+    service = models.ForeignKey(SubscriptionService, on_delete=models.PROTECT, related_name="user_subscriptions")
+    description = models.TextField(null=True, blank=True, verbose_name="Description")
+
+    # Plan & pricing
+    plan_name = models.CharField(max_length=100, null=True, blank=True)  # "Premium", "Family", "Basic"
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    currency = models.CharField(max_length=3, choices=CurrencyChoices.choices, default=CurrencyChoices.TRY)
+    billing_cycle = models.CharField(
+        max_length=20, choices=BillingCycleChoices.choices, default=BillingCycleChoices.MONTHLY, null=True, blank=True
+    )
+
+    # Dates
+    started_at = models.DateField()
+    next_billing_date = models.DateField()
+    trial_end_date = models.DateField(null=True, blank=True)
+    cancelled_at = models.DateField(null=True, blank=True)
+
+    # Status & settings
+    status = models.CharField(
+        max_length=20, choices=SubscriptionStatusChoices.choices, default=SubscriptionStatusChoices.ACTIVE
+    )
+    auto_renewal = models.BooleanField(default=False)
+
+    # Payment
+    payment_method = models.CharField(max_length=50, choices=PaymentMethodChoices.choices)
+    payment_account = models.CharField(max_length=100, blank=True)  # "Garanti *1234"
+
+    # Notes
+    notes = models.TextField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "User Subscription"
