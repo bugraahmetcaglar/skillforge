@@ -19,7 +19,7 @@ class IsOwnerOrAdmin(permissions.BasePermission):
             if user.is_staff:
                 return True
 
-            if hasattr(obj, "owner"):
+            if hasattr(obj, "owner") or hasattr(obj, "user"):
                 return obj.owner == user
 
             return obj == user
