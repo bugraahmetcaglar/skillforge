@@ -32,7 +32,14 @@ class BaseReminder(BaseModel):
         self.status = ReminderStatusChoices.COMPLETED
         self.save(update_fields=["status", "last_updated"])
 
-    def mark_as_snoozed(self, snooze_until: str):
+    from datetime import datetime
+
+    def mark_as_snoozed(self, snooze_until: datetime):
+        if isinstance(snooze_until, str):
+            try:
+                snooze_until = datetime.fromisoformat(snooze_until)
+            except ValueError:
+                raise ValueError("Invalid datetime format for snooze_until. Expected ISO 8601 format.")
         self.snoozed_until = snooze_until
         self.snooze_count += 1
         self.status = ReminderStatusChoices.SNOOZED
