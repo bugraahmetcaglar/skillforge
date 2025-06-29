@@ -4,7 +4,7 @@ from django.db.models import Q
 from django_filters import rest_framework as filters
 
 from apps.contact.models import Contact
-from core.enums import SourceTextChoices
+from apps.contact.enums import SourceTextChoices
 
 
 class ContactFilter(filters.FilterSet):
