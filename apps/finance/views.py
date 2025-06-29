@@ -1,11 +1,11 @@
 from apps.finance.models import UserSubscription
 from apps.finance.serializers import UserSubscriptionSerializer
-from core.permissions import IsOwnerOrAdmin
+from core.permissions import IsOwner
 from core.views import BaseCreateAPIView, BaseListAPIView
 
 
 class UserSubscriptionCreateAPIView(BaseCreateAPIView):
-    permission_classes = [IsOwnerOrAdmin]
+    permission_classes = [IsOwner]
     serializer_class = UserSubscriptionSerializer
 
     def post(self, request, *args, **kwargs):
@@ -20,7 +20,7 @@ class UserSubscriptionCreateAPIView(BaseCreateAPIView):
 
 
 class ActiveSubscriptionListAPIView(BaseListAPIView):
-    permission_classes = [IsOwnerOrAdmin]
+    permission_classes = [IsOwner]
     serializer_class = UserSubscriptionSerializer
 
     def get(self, request, *args, **kwargs):

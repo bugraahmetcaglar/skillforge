@@ -16,7 +16,7 @@ from apps.contact.serializers import (
     ContactDuplicateSerializer,
 )
 from apps.contact.services import VCardImportService
-from core.permissions import IsOwnerOrAdmin
+from core.permissions import IsOwner
 from core.views import BaseAPIView, BaseListAPIView, BaseRetrieveAPIView
 
 logger = logging.getLogger(__name__)
@@ -76,7 +76,7 @@ class ContactListAPIView(BaseListAPIView):
     """
 
     serializer_class = ContactListSerializer
-    permission_classes = [IsOwnerOrAdmin]
+    permission_classes = [IsOwner]
     filterset_class = ContactFilter
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["first_name", "last_name", "email", "mobile_phone", "organization"]
@@ -107,7 +107,7 @@ class ContactDetailAPIView(BaseRetrieveAPIView):
     """
 
     serializer_class = ContactDetailSerializer
-    permission_classes = [IsOwnerOrAdmin]
+    permission_classes = [IsOwner]
     lookup_field = "pk"
 
     def get_queryset(self):
@@ -135,7 +135,7 @@ class ContactDuplicateListAPIView(BaseListAPIView):
     """Contact duplicate detection API using existing manager method"""
 
     serializer_class = ContactDuplicateSerializer
-    permission_classes = [IsOwnerOrAdmin]
+    permission_classes = [IsOwner]
     filterset_class = ContactDuplicateFilter
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
 
