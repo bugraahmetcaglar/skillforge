@@ -1,25 +1,37 @@
 from __future__ import annotations
 import requests
+import logging
 
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 
 
 class TelegramAPI:
     """
     A class to interact with the Telegram Bot API.
     """
-
-    BASE_URL = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
-    TELEGRAM_BOT_TOKEN = settings.TELEGRAM_REMINDER_BOT_TOKEN
+    BASE_URL = f"https://api.telegram.org"
 
     def __init__(self) -> None:
-        if not self.TELEGRAM_BOT_TOKEN:
-            raise ValueError("Telegram Bot Token is not set in settings.")
+        self.reminder_bot_token = getattr(settings, "TELEGRAM_REMINDER_BOT_TOKEN")
+        self.chat_id = getattr(settings, "TELEGRAM_CHAT_ID")  # will change
 
-        # Initialize the base URL for the Telegram Bot API
-        self.base_url = f"{self.BASE_URL}/bot{self.TELEGRAM_BOT_TOKEN}"
+    @property
+    def reminder_bot_url(self) -> str:
+        if not self.reminder_bot_token:
+            raise ValueError("Telegram Reminder Bot token is not set in settings.")
 
-    def send_reminder_bot_message(self, chat_id: str, text: str, parse_mode: str = "HTML") -> bool:
+        return f"{self.BASE_URL}/bot{self.reminder_bot_token}"
+
+    @property
+    def reminder_bot_chat_id(self) -> str:
+        if not self.reminder_bot_chat_id:
+            raise ValueError("Telegram chat ID is not set in settings.")
+
+        return self.reminder_bot_chat_id
+
+    def send_reminder_bot_message(self, message: str) -> bool:
         """
         Send a message to a Telegram chat.
 
@@ -28,9 +40,14 @@ class TelegramAPI:
         :param parse_mode: The parse mode for formatting (default is HTML).
         :return: True if the message was sent successfully, False otherwise.
         """
-        url = f"{self.base_url}/sendMessage"
-        payload = {"chat_id": chat_id, "text": text, "parse_mode": parse_mode}
+        url = f"{self.reminder_bot_url}/sendMessage-asdf"
+        payload = {"chat_id": self.reminder_bot_chat_id, "text": message, "parse_mode": "HTML"}
 
         response = requests.post(url, json=payload)
-
-        return response.status_code == 200
+        if not response.ok:
+            logger.error(
+                f"Failed to send message to chat {self.reminder_bot_chat_id}. "
+                f"Status code: {response.status_code}, Response: {response.text}"
+            )
+            raise ValueError(f"Failed to send message: {response.text}")
+        return True
