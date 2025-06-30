@@ -7,7 +7,7 @@ from apps.finance.enums import SubscriptionStatusChoices
 from apps.finance.models import UserSubscription
 from core.enums import CurrencyChoices
 from core.services.exchange_rate_api import ExchangeRateAPI
-from core.services.telegram_api import TelegramAPI
+from core.services.telegram_api import TelegramReminderAPI
 
 
 def generate_birthday_reminders_in_30_days():
@@ -32,7 +32,7 @@ def generate_birthday_reminders_in_30_days():
         for contact in contacts:
             message = "🎂 <b>Upcoming Birthdays:</b>\n\n"
             message += f"• {contact.display_name} - {contact.birthday.strftime("%d %B %Y")}\n"
-        TelegramAPI().send_reminder_bot_message(message)
+        TelegramReminderAPI().send_reminder_bot_message(message)
 
     return True
 
@@ -66,7 +66,7 @@ def generate_auto_renewal_subscription_reminders():
             message += f"• <b>Website:</b> {subscription.service.website_url}\n"
             message += "\n"
 
-    TelegramAPI().send_reminder_bot_message(message)
+    TelegramReminderAPI().send_reminder_bot_message(message)
 
     return True
 
@@ -112,7 +112,7 @@ def monthly_subscription_expense_report():
     message = "💰 <b>This Month's Subscription Amount:</b>\n\n"
     message += f"• <b>Total Amount:</b> {total_amount} 'TRY'\n"
     message += "\n"
-    TelegramAPI().send_reminder_bot_message(message)
+    TelegramReminderAPI().send_reminder_bot_message(message)
 
     return "succesfull"
 
@@ -148,6 +148,6 @@ def next_month_subscription_expense_report():
 
     message += f"• <b>Total Amount:</b> {total_amount} 'TRY'\n"
     message += "\n"
-    TelegramAPI().send_reminder_bot_message(message)
+    TelegramReminderAPI().send_reminder_bot_message(message)
 
     return "succesfull"

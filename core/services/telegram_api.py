@@ -7,15 +7,15 @@ from django.conf import settings
 logger = logging.getLogger(__name__)
 
 
-class TelegramAPI:
-    """
-    A class to interact with the Telegram Bot API.
+class TelegramReminderAPI:
+    """A class to interact with the Telegram Reminder Bot API.
+    This class provides methods to send messages to a Telegram chat using the Reminder Bot.
     """
     BASE_URL = f"https://api.telegram.org"
 
     def __init__(self) -> None:
         self.reminder_bot_token = getattr(settings, "TELEGRAM_REMINDER_BOT_TOKEN")
-        self.chat_id = getattr(settings, "TELEGRAM_CHAT_ID")  # will change
+        self.reminder_chat_id = getattr(settings, "TELEGRAM_REMINDER_CHAT_ID")
 
     @property
     def reminder_bot_url(self) -> str:

@@ -295,7 +295,7 @@ LOGGING = {
 
 # Telegram Bot Configuration
 TELEGRAM_REMINDER_BOT_TOKEN = os.environ.get("TELEGRAM_REMINDER_BOT_TOKEN")
-TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
+TELEGRAM_REMINDER_CHAT_ID = os.environ.get("TELEGRAM_REMINDER_CHAT_ID")
 
 # Exchange Rate API Configuration
 EXCHANGE_RATE_API_KEY = os.environ.get("EXCHANGE_RATE_API_KEY")
