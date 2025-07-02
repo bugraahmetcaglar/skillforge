@@ -5,9 +5,9 @@ from django.db import models
 from apps.contact.models import Contact
 from apps.finance.enums import SubscriptionStatusChoices
 from apps.finance.models import UserSubscription
+from apps.thirdparty.telegram.apis import TelegramReminderAPI
 from core.enums import CurrencyChoices
 from core.services.exchange_rate_api import ExchangeRateAPI
-from core.services.telegram_api import TelegramReminderAPI
 
 
 def generate_birthday_reminders_in_30_days():

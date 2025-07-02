@@ -1,3 +1,4 @@
+from __future__ import annotations
 import logging
 
 from rest_framework.permissions import AllowAny
@@ -17,7 +18,6 @@ class TelegramReminderWebhookAPIView(BaseAPIView):
 
     def post(self, request, *args, **kwargs):
         """Handle incoming webhook messages from the Telegram Reminder Bot."""
-        # telegram_reminder = TelegramReminderAPI()
         webhook_data = request.data
 
         if "message" in webhook_data:
@@ -30,7 +30,7 @@ class TelegramReminderWebhookAPIView(BaseAPIView):
             logger.info(f"AI processing message from @{username}: {text}")
 
             # Process with NLP
-            processed_message = self.message_processor.process_message(text, user_id)
+            # processed_message = self.message_processor.process_message(text, user_id)
 
             # TODO: Execute appropriate task based on intent
             response_data = {

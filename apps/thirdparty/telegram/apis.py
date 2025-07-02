@@ -11,6 +11,7 @@ class TelegramReminderAPI:
     """A class to interact with the Telegram Reminder Bot API.
     This class provides methods to send messages to a Telegram chat using the Reminder Bot.
     """
+
     BASE_URL = f"https://api.telegram.org"
 
     def __init__(self) -> None:
