@@ -58,41 +58,20 @@ class TelegramResponseService(TelegramReminderAPI):
 
 class IntentTelegramResponseHandler:
     """Handle responses based on detected intents"""
-
+    
     def __init__(self):
         self.telegram_service = TelegramResponseService()
 
     def handle_intent(self, intent: str, first_name: str | None = None) -> bool:
         """Route intent to appropriate handler"""
-
-        intent_handlers = {
-            "greeting": self._handle_greeting,
-            "help": self._handle_help,
-            "subscription_next_month_cost": self._handle_subscription_cost,
-            "unknown": self._handle_unknown,
-        }
-
-        handler = intent_handlers.get(intent, self._handle_unknown)
-        return handler(first_name)
-
-    def _handle_greeting(self, first_name: str | None = None) -> bool:
-        """Handle greeting intent"""
-        return self.telegram_service.send_greeting(first_name)
-
-    def _handle_help(self) -> bool:
-        """Handle help intent"""
-        return self.telegram_service.send_help_menu()
-
-    def _handle_subscription_cost(self) -> bool:
-        """Handle subscription cost query"""
-        from django_q.tasks import async_task
-
-        # Queue background task - task kendisi mesaj da gönderecek
-        task_id = async_task("apps.reminder.tasks.monthly_subscription_expense_report")
-
-        logger.info(f"Queued subscription cost task {task_id}")
-        return True
-
-    def _handle_unknown(self) -> bool:
-        """Handle unknown intent"""
-        return self.telegram_service.send_unknown_intent()
+        
+        if intent == 'greeting':
+            return self.telegram_service.send_greeting(first_name)
+        elif intent == 'help':
+            return self.telegram_service.send_help_menu()
+        elif intent == 'subscription_next_month_cost':
+            from django_q.tasks import async_task
+            async_task('apps.reminder.tasks.monthly_subscription_expense_report')
+            return True
+        else:
+            return self.telegram_service.send_unknown_intent()

@@ -24,7 +24,7 @@ class TelegramReminderWebhookAPIView(BaseAPIView):
 
     def post(self, request, *args, **kwargs):
         """Handle incoming webhook messages from the Telegram Reminder Bot."""
-        
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -34,22 +34,18 @@ class TelegramReminderWebhookAPIView(BaseAPIView):
             message = webhook_data["message"]
             text = message.get("text", "")
             user_id = message["from"]["id"]
-            chat_id = message["chat"]["id"]
             username = message["from"].get("username", "Unknown")
 
             logger.info(f"AI processing message from @{username}: {text}")
 
             # Process with NLP
-            processed_message = self.message_processor.process_message(text, user_id)
+            processed_message = self.message_processor.process_message(message_text=text, user_id=user_id)
 
             # Handle intent and send response
             from apps.ai.services.telegram_response import IntentTelegramResponseHandler
 
             intent_handler = IntentTelegramResponseHandler()
-            intent_handler.handle_intent(
-                intent=processed_message.intent,
-                first_name="Bugra"
-            )
+            intent_handler.handle_intent(intent=processed_message.intent, first_name="Bugra")
             response_data = {
                 "processed": {
                     "intent": processed_message.intent,

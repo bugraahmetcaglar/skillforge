@@ -38,13 +38,13 @@ class TelegramMessageProcessor:
         logger.info(f"Processing message from user {user_id}: {message_text}")
 
         # Clean and preprocess text
-        cleaned_text = self.text_processor.clean_text(message_text)
+        cleaned_text = self.text_processor.clean_text(text=message_text)
 
         # Extract entities first
         entities = self.text_processor.extract_entities(cleaned_text)
 
         # Classify intent using database patterns
-        intent_result = self._classify_intent(cleaned_text, user_id)
+        intent_result = self._classify_intent(text=cleaned_text, user_id=user_id)
 
         processed = ProcessedMessage(
             original_text=message_text,
@@ -70,7 +70,7 @@ class TelegramMessageProcessor:
 
         if not patterns.exists():
             # No patterns yet, store message for future learning
-            self._store_unknown_message(text, user_id)
+            self._store_unknown_message(text=text, user_id=user_id)
             return {"intent": "unknown", "confidence": 0.0}
 
         words = text.lower().split()
@@ -80,22 +80,25 @@ class TelegramMessageProcessor:
         pattern_used = None
 
         for pattern in patterns:
-            logger.info(f"Testing pattern: {pattern.intent_name}, keywords: {pattern.keywords}, required: {pattern.required_words}")  # DEBUG
+            logger.info(
+                f"Testing pattern: {pattern.intent_name}, keywords: {pattern.keywords}, required: {pattern.required_words}"
+            )  # DEBUG
             score = self._calculate_pattern_score(words, pattern)
-            logger.info(f"Pattern {pattern.intent_name} scored: {score}, threshold: {pattern.confidence_threshold}")  # DEBUG
-            
+            logger.info(
+                f"Pattern {pattern.intent_name} scored: {score}, threshold: {pattern.confidence_threshold}"
+            )  # DEBUG
+
             if score > pattern.confidence_threshold:
-                scores[pattern.intent_name] = {
-                    'score': score,
-                    'pattern': pattern
-                }
+                scores[pattern.intent_name] = {"score": score, "pattern": pattern}
             else:
-                logger.info(f"Pattern {pattern.intent_name} failed threshold check: {score} <= {pattern.confidence_threshold}")  # DEBUG
+                logger.info(
+                    f"Pattern {pattern.intent_name} failed threshold check: {score} <= {pattern.confidence_threshold}"
+                )  # DEBUG
 
         logger.info(f"Final scores: {scores}")
 
         if not scores:
-            self._store_unknown_message(text, user_id)
+            self._store_unknown_message(text=text, user_id=user_id)
             return {"intent": "unknown", "confidence": 0.0}
 
         # Get best match
@@ -107,7 +110,9 @@ class TelegramMessageProcessor:
         pattern_used.record_usage(success=True)
 
         # Store message for learning
-        self._store_classified_message(text, user_id, best_intent, best_score, pattern_used)
+        self._store_classified_message(
+            text=text, user_id=user_id, intent=best_intent, confidence=best_score, pattern=pattern_used
+        )
 
         return {"intent": best_intent, "confidence": best_score, "pattern_id": pattern_used.id}
 
