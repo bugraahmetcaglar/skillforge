@@ -1,0 +1,28 @@
+{
+  "subscription": [
+    "abonelik",
+    "üyelik"
+  ],
+  "cost": [
+    "tutar",
+    "ne kadar",
+    "kaç para"
+  ],
+  "payment": [
+    "ödeme",
+    "öde"
+  ],
+  "total": [
+    "toplam"
+  ],
+  "monthly": [
+    "aylık"
+  ],
+  "cancel": [
+    "iptal"
+  ],
+  "report": [
+    "rapor",
+    "liste"
+  ]
+}
