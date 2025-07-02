@@ -41,7 +41,7 @@ class TelegramReminderAPI:
         :param parse_mode: The parse mode for formatting (default is HTML).
         :return: True if the message was sent successfully, False otherwise.
         """
-        url = f"{self.reminder_bot_url}/sendMessage-asdf"
+        url = f"{self.reminder_bot_url}/sendMessage"
         payload = {"chat_id": self.reminder_bot_chat_id, "text": message, "parse_mode": "HTML"}
 
         response = requests.post(url, json=payload)
