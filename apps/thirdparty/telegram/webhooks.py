@@ -4,6 +4,8 @@ import logging
 from rest_framework.permissions import AllowAny
 from rest_framework import status
 
+from apps.ai.nlp.message_processor import TelegramMessageProcessor
+from apps.thirdparty.telegram.serializers import TelegramWebhookSerializer
 from core.views import BaseAPIView
 
 logger = logging.getLogger(__name__)
@@ -14,7 +16,7 @@ class TelegramReminderWebhookAPIView(BaseAPIView):
 
     permission_classes = [AllowAny]
     authentication_classes = []
-    serializer_class = None
+    serializer_class = TelegramWebhookSerializer
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -22,7 +24,11 @@ class TelegramReminderWebhookAPIView(BaseAPIView):
 
     def post(self, request, *args, **kwargs):
         """Handle incoming webhook messages from the Telegram Reminder Bot."""
-        webhook_data = request.data
+        
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        webhook_data = serializer.validated_data
 
         if "message" in webhook_data:
             message = webhook_data["message"]

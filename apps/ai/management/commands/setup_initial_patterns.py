@@ -14,21 +14,21 @@ class Command(BaseCommand):
                 "keywords": ["merhaba", "selam", "sa"],
                 "required_words": [],
                 "weight": 1.0,
-                "confidence_threshold": 0.5,
+                "confidence_threshold": 0.2,
             },
             {
                 "intent_name": "subscription_next_month_cost",
                 "keywords": ["gelecek", "ay", "abonelik", "tutar"],
                 "required_words": ["gelecek", "abonelik"],
                 "weight": 1.0,
-                "confidence_threshold": 0.6,
+                "confidence_threshold": 0.4,
             },
             {
                 "intent_name": "help",
                 "keywords": ["yardım", "help"],
                 "required_words": ["yardım"],
                 "weight": 1.0,
-                "confidence_threshold": 0.8,
+                "confidence_threshold": 0.3,
             },
         ]
 
