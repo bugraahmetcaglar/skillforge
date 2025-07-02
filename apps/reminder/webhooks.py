@@ -1,8 +1,11 @@
+import logging
+
 from rest_framework.permissions import AllowAny
 from rest_framework import status
 
 from core.views import BaseAPIView
-from core.services.telegram_api import TelegramReminderAPI
+
+logger = logging.getLogger(__name__)
 
 
 class TelegramReminderWebhookAPIView(BaseAPIView):
@@ -14,22 +17,33 @@ class TelegramReminderWebhookAPIView(BaseAPIView):
 
     def post(self, request, *args, **kwargs):
         """Handle incoming webhook messages from the Telegram Reminder Bot."""
-        telegram_reminder = TelegramReminderAPI()
-        breakpoint()
-        data = {
-            "update_id": 526592500,
-            "message": {
-                "message_id": 34,
-                "from": {
-                    "id": 1775999934,
-                    "is_bot": False,
-                    "first_name": "Orynex",
-                    "username": "orynex",
-                    "language_code": "en",
-                },
-                "chat": {"id": 1775999934, "first_name": "Orynex", "username": "orynex", "type": "private"},
-                "date": 1751321883,
-                "text": "sa",
-            },
-        }
-        return self.success_response(data={"status": "success"}, status_code=status.HTTP_200_OK)
+        # telegram_reminder = TelegramReminderAPI()
+        webhook_data = request.data
+
+        if "message" in webhook_data:
+            message = webhook_data["message"]
+            text = message.get("text", "")
+            user_id = message["from"]["id"]
+            chat_id = message["chat"]["id"]
+            username = message["from"].get("username", "Unknown")
+
+            logger.info(f"AI processing message from @{username}: {text}")
+
+            # Process with NLP
+            processed_message = self.message_processor.process_message(text, user_id)
+
+            # TODO: Execute appropriate task based on intent
+            response_data = {
+                "processed": {
+                    "intent": processed_message.intent,
+                    "confidence": processed_message.confidence,
+                    "entities": processed_message.entities,
+                    "original_text": processed_message.original_text,
+                }
+            }
+
+            return self.success_response(
+                data=response_data,
+                message=f"AI processed message with intent: {processed_message.intent}",
+                status_code=status.HTTP_200_OK,
+            )
