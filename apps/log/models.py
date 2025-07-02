@@ -57,7 +57,7 @@ class LogEntry(BaseModel):
         return f"{self.level} - {self.logger_name} - {self.message[:50]}"
 
     @classmethod
-    def create_from_log_record(cls, record: logging.LogRecord, extra_context: Dict | None = None) -> LogEntry:
+    def create_from_log_record(cls, record: logging.LogRecord, extra_context: Dict | None = None) -> LogEntry | None:
         """Create LogEntry from Python logging.LogRecord"""
         from datetime import datetime
 
@@ -70,7 +70,7 @@ class LogEntry(BaseModel):
             import traceback
 
             exception_info = "".join(traceback.format_exception(*record.exc_info))
-
+        return None
         return cls.objects.create(
             timestamp=datetime.fromtimestamp(record.created, tz=timezone.get_current_timezone()),
             level=record.levelname,

@@ -42,7 +42,14 @@ class TelegramReminderWebhookAPIView(BaseAPIView):
             # Process with NLP
             processed_message = self.message_processor.process_message(text, user_id)
 
-            # TODO: Execute appropriate task based on intent
+            # Handle intent and send response
+            from apps.ai.services.telegram_response import IntentTelegramResponseHandler
+
+            intent_handler = IntentTelegramResponseHandler()
+            intent_handler.handle_intent(
+                intent=processed_message.intent,
+                first_name="Bugra"
+            )
             response_data = {
                 "processed": {
                     "intent": processed_message.intent,

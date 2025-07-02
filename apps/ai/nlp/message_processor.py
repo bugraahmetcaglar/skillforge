@@ -14,7 +14,7 @@ class ProcessedMessage:
 
     original_text: str
     cleaned_text: str
-    intent: str | None = None
+    intent: str = ""
     entities: dict | None = None
     confidence: float = 0.0
     pattern_id: int | None = None

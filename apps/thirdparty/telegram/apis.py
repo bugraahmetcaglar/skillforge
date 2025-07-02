@@ -32,7 +32,7 @@ class TelegramReminderAPI:
 
         return self.reminder_bot_chat_id
 
-    def send_reminder_bot_message(self, message: str) -> bool:
+    def send_message(self, message: str) -> bool:
         """
         Send a message to a Telegram chat.
 
