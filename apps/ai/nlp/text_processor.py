@@ -1,7 +1,6 @@
 import re
 import json
 from pathlib import Path
-from typing import Dict, Any, List
 
 
 class TurkishTextProcessor:
@@ -56,7 +55,7 @@ class TurkishTextProcessor:
         filtered_words = [word for word in words if word not in self.stopwords]
         return " ".join(filtered_words)
 
-    def extract_entities(self, text: str) -> Dict[str, Any]:
+    def extract_entities(self, text: str) -> dict:
         """Extract entities from text"""
         entities = {}
 
@@ -90,7 +89,7 @@ class TurkishTextProcessor:
                     return period
         return None
 
-    def _extract_financial_context(self, text: str) -> List[str]:
+    def _extract_financial_context(self, text: str) -> list[str]:
         """Extract financial context from text"""
         context = []
         for category, terms in self.financial_terms.items():
@@ -100,7 +99,7 @@ class TurkishTextProcessor:
                     break
         return list(set(context))  # Remove duplicates
 
-    def _extract_amounts(self, text: str) -> List[str]:
+    def _extract_amounts(self, text: str) -> list[str]:
         """Extract monetary amounts"""
         amount_patterns = [r"\d+\s*tl", r"\d+\s*lira", r"\d+\s*₺", r"\d+\.\d+\s*tl", r"\d+,\d+\s*tl"]
 

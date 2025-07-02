@@ -51,6 +51,7 @@ LOCAL_APPS = [
     "apps.reminder",
     "apps.finance",
     "apps.ai",
+    "apps.thirdparty",
 ]
 
 THIRD_PARTY_APPS = [
