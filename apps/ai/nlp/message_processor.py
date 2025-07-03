@@ -41,7 +41,7 @@ class TelegramMessageProcessor:
         cleaned_text = self.text_processor.clean_text(text=message_text)
 
         # Extract entities first
-        entities = self.text_processor.extract_entities(cleaned_text)
+        entities = self.text_processor.extract_entities(text=cleaned_text)
 
         # Classify intent using database patterns
         intent_result = self._classify_intent(text=cleaned_text, user_id=user_id)

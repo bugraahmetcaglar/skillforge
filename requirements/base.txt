@@ -49,4 +49,4 @@ requests-mock==1.12.1  # https://github.com/jamielennox/requests-mock
 vobject==0.9.6.1
 
 # AI
-scipy-1.16.0
+scipy==1.16.0

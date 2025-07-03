@@ -17,7 +17,7 @@ class TelegramResponseService(TelegramReminderAPI):
         if first_name:
             greeting_text += f" {first_name}"
 
-        greeting_text += "!\n\nSize nasıl yardımcı olabilirim?"
+        greeting_text += "!\n\nSana nasıl yardımcı olabilirim?"
 
         return self.send_message(greeting_text)
 
@@ -62,11 +62,11 @@ class IntentTelegramResponseHandler:
     def __init__(self):
         self.telegram_service = TelegramResponseService()
 
-    def handle_intent(self, intent: str, first_name: str | None = None) -> bool:
+    def handle_intent(self, intent: str) -> bool:
         """Route intent to appropriate handler"""
         
         if intent == 'greeting':
-            return self.telegram_service.send_greeting(first_name)
+            return self.telegram_service.send_greeting(first_name="Bugra")
         elif intent == 'help':
             return self.telegram_service.send_help_menu()
         elif intent == 'subscription_next_month_cost':

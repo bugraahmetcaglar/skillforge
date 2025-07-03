@@ -34,6 +34,8 @@ class TelegramReminderWebhookAPIView(BaseAPIView):
             message = webhook_data["message"]
             text = message.get("text", "")
             user_id = message["from"]["id"]
+            chat_id = message["chat"]["id"]
+            print(chat_id)
             username = message["from"].get("username", "Unknown")
 
             logger.info(f"AI processing message from @{username}: {text}")
@@ -45,7 +47,7 @@ class TelegramReminderWebhookAPIView(BaseAPIView):
             from apps.ai.services.telegram_response import IntentTelegramResponseHandler
 
             intent_handler = IntentTelegramResponseHandler()
-            intent_handler.handle_intent(intent=processed_message.intent, first_name="Bugra")
+            intent_handler.handle_intent(intent=processed_message.intent)
             response_data = {
                 "processed": {
                     "intent": processed_message.intent,
@@ -54,6 +56,11 @@ class TelegramReminderWebhookAPIView(BaseAPIView):
                     "original_text": processed_message.original_text,
                 }
             }
+
+            logger.info(
+                f"Processed message: intent={processed_message.intent}, "
+                f"confidence={processed_message.confidence}, entities={processed_message.entities}"
+            )
 
             return self.success_response(
                 data=response_data,
