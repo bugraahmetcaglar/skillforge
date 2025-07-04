@@ -1,0 +1,21 @@
+{
+  "greeting": [
+    "merhaba",
+    "selam", 
+    "sa"
+  ],
+  "help": [
+    "yardım",
+    "help"
+  ],
+  "thanks": [
+    "teşekkür",
+    "sağol",
+    "thanks"
+  ],
+  "goodbye": [
+    "görüşürüz",
+    "bay",
+    "bye"
+  ]
+}
