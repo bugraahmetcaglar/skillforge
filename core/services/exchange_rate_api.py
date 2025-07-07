@@ -26,7 +26,7 @@ class ExchangeRateAPI:
         base_currency: CurrencyChoices,
         target_currency: CurrencyChoices,
         target_date: datetime.date | None = None,
-    ) -> Decimal | None:
+    ) -> Decimal:
         url = self.base_url
 
         if target_date:

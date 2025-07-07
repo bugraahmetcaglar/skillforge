@@ -89,9 +89,11 @@ def refresh_next_billing_dates():
 
 def monthly_subscription_expense_report():
     """Generates a monthly subscription expense report and sends it via Telegram."""
+    from dateutil.relativedelta import relativedelta
+
     today = date.today()
     start_date = today.replace(day=1)
-    end_date = (start_date + timedelta(days=31)).replace(day=1)
+    end_date = (start_date + relativedelta(months=1)).replace(day=1)
 
     user_subscriptions = UserSubscription.objects.filter(
         next_billing_date__gte=start_date,
@@ -109,7 +111,7 @@ def monthly_subscription_expense_report():
                 target_currency=CurrencyChoices.TRY,
             )
 
-        conversion_amount = Money(
+        moneyed_conversition_rate = Money(
             amount=str(conversion_rate),
             currency=CurrencyChoices.TRY,
         ).amount

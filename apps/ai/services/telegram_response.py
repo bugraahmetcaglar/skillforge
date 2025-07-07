@@ -52,3 +52,24 @@ class TelegramResponseService(TelegramReminderAPI):
         """Send processing message for long-running tasks"""
 
         return self.send_message("⏳ İşleniyor... Lütfen bekleyin.")
+
+
+# class IntentTelegramResponseHandler:
+#     """Handle responses based on detected intents"""
+    
+#     def __init__(self):
+#         self.telegram_service = TelegramResponseService()
+
+#     def handle_intent(self, intent: str) -> bool:
+#         """Route intent to appropriate handler"""
+        
+#         if intent == 'greeting':
+#             return self.telegram_service.send_greeting(first_name="Bugra")
+#         elif intent == 'help':
+#             return self.telegram_service.send_help_menu()
+#         elif intent == 'subscription_next_month_cost':
+#             from django_q.tasks import async_task
+#             async_task('apps.reminder.tasks.monthly_subscription_expense_report')
+#             return True
+#         else:
+#             return self.telegram_service.send_unknown_intent()
