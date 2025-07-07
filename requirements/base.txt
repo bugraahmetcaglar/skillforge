@@ -50,3 +50,6 @@ vobject==0.9.6.1
 
 # AI
 scipy==1.16.0
+
+# Money
+py-moneyed==3.0
