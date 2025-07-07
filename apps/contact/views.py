@@ -143,5 +143,4 @@ class ContactDuplicateListAPIView(BaseListAPIView):
         """Get duplicate contacts using Contact manager's duplicate_numbers method"""
         logger.info(f"Fetching duplicate contacts for user {self.request.user.id}")
 
-        breakpoint()
         return Contact.objects.duplicate_numbers(owner=self.request.user)
