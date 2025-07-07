@@ -7,6 +7,7 @@ from apps.finance.enums import SubscriptionStatusChoices
 from apps.finance.models import UserSubscription
 from apps.thirdparty.telegram.apis import TelegramReminderAPI
 from core.enums import CurrencyChoices
+from core.money import Money
 from core.services.exchange_rate_api import ExchangeRateAPI
 
 
@@ -73,7 +74,7 @@ def generate_auto_renewal_subscription_reminders():
 
 def refresh_next_billing_dates():
     """Refreshes the next billing dates for all active user subscriptions
-    that have a next billing date in the past.
+    that have a next billing date in the past based on their billing cycle.
     """
     today = date.today()
     user_subscriptions = UserSubscription.objects.filter(
@@ -81,8 +82,7 @@ def refresh_next_billing_dates():
     )
 
     for subscription in user_subscriptions:
-        subscription.next_billing_date = subscription.next_billing_date + timedelta(days=30)
-        subscription.save(update_fields=["next_billing_date", "last_updated"])
+        subscription.refresh_next_billing_date()
 
     return True
 
@@ -94,7 +94,9 @@ def monthly_subscription_expense_report():
     end_date = (start_date + timedelta(days=31)).replace(day=1)
 
     user_subscriptions = UserSubscription.objects.filter(
-        next_billing_date__gte=start_date, next_billing_date__lt=end_date, status=SubscriptionStatusChoices.ACTIVE
+        next_billing_date__gte=start_date,
+        next_billing_date__lt=end_date,
+        status=SubscriptionStatusChoices.ACTIVE,
     )
 
     total_amount = Decimal("0.00")
@@ -107,7 +109,12 @@ def monthly_subscription_expense_report():
                 target_currency=CurrencyChoices.TRY,
             )
 
-        total_amount += user_subscription.amount * conversion_rate
+        conversion_amount = Money(
+            amount=str(conversion_rate),
+            currency=CurrencyChoices.TRY,
+        ).amount
+
+        total_amount += (user_subscription.amount * conversion_amount).quantize(Decimal("0.01"))
 
     message = "💰 <b>This Month's Subscription Amount:</b>\n\n"
     message += f"• <b>Total Amount:</b> {total_amount} 'TRY'\n"
@@ -125,18 +132,18 @@ def next_month_subscription_expense_report():
     if today.month == 12:
         start_date = date(year=today.year + 1, month=1, day=1)
         end_date = date(year=today.year + 1, month=2, day=1)
-        message += "<b>Don't forget to check new year prices !</b>\n\n"
     else:
         start_date = date(year=today.year, month=today.month + 1, day=1)
         end_date = date(year=today.year, month=today.month + 2, day=1)
 
     user_subscriptions = UserSubscription.objects.filter(
-        next_billing_date__gte=start_date, next_billing_date__lt=end_date, status=SubscriptionStatusChoices.ACTIVE
+        next_billing_date__gte=start_date,
+        next_billing_date__lt=end_date,
+        status=SubscriptionStatusChoices.ACTIVE,
     )
 
     total_amount = Decimal("0.00")
     for user_subscription in user_subscriptions:
-        conversion_rate = Decimal("1.00")
 
         if user_subscription.currency != CurrencyChoices.TRY:
             conversion_rate = ExchangeRateAPI().get_exchange_rate(
@@ -144,7 +151,7 @@ def next_month_subscription_expense_report():
                 target_currency=CurrencyChoices.TRY,
             )
 
-        total_amount += user_subscription.amount * conversion_rate
+        total_amount += user_subscription.amount * (conversion_rate or Decimal("1.00"))
 
     message += f"• <b>Total Amount:</b> {total_amount} 'TRY'\n"
     message += "\n"
