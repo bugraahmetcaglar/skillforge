@@ -35,7 +35,6 @@ class TelegramReminderWebhookAPIView(BaseAPIView):
             text = message.get("text", "")
             user_id = message["from"]["id"]
             chat_id = message["chat"]["id"]
-            print(chat_id)
             username = message["from"].get("username", "Unknown")
 
             logger.info(f"AI processing message from @{username}: {text}")
