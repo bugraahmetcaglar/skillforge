@@ -116,7 +116,7 @@ def monthly_subscription_expense_report():
             currency=CurrencyChoices.TRY,
         ).amount
 
-        total_amount += (user_subscription.amount * conversion_amount).quantize(Decimal("0.01"))
+        total_amount += (user_subscription.amount * moneyed_conversition_rate).quantize(Decimal("0.01"))
 
     message = "💰 <b>This Month's Subscription Amount:</b>\n\n"
     message += f"• <b>Total Amount:</b> {total_amount} 'TRY'\n"
