@@ -41,6 +41,15 @@ class ExchangeRateAPI:
                 f"Failed to fetch exchange rate for {base_currency} to {target_currency} on {target_date}. "
                 f"Status code: {response.status_code}, Response: {response.text}"
             )
-            return None
+            return Decimal("0")
 
-        return response.json().get("conversion_rate", None)
+        conversion_rate = response.json().get("conversion_rate", None)
+
+        if not (conversion_rate and isinstance(conversion_rate, (Decimal, float, int))):
+            logger.error(
+                f"Conversion rate not found for {base_currency} to {target_currency} on {target_date}. "
+                f"Response: {response.json()}"
+            )
+            return Decimal("0")
+
+        return Decimal(conversion_rate).quantize(Decimal("0.01"))
