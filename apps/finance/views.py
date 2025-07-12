@@ -31,8 +31,9 @@ class ActiveSubscriptionListAPIView(BaseListAPIView):
                 error_message="You must be logged in to view your subscriptions.",
             )
 
-        return self.success_response(
-            data=self.get_serializer(
-                UserSubscription.objects.filter(user=user, status="active"), many=True
-            ).data
-        )
+        data = self.get_serializer(
+            UserSubscription.objects.filter(user=user, status="active"),
+            many=True,
+        ).data
+
+        return self.success_response(data=data, status_code=200)
