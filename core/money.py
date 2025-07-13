@@ -61,64 +61,64 @@ class Money:
 
         return f"Money(amount={self.amount}, currency='{self.currency_code}')"
 
-    def __eq__(self, other: object) -> bool | TypeError:
+    def __eq__(self, other: object) -> bool:
         """Check equality of two Money objects (same currency only)"""
         if not isinstance(other, Money):
-            return TypeError("Comparison must be with another Money instance")
+            raise TypeError("Comparison must be with another Money instance")
         return self.currency_code == other.currency_code and self.amount == other.amount
 
-    def __ne__(self, other: Money) -> bool | TypeError:
+    def __ne__(self, other: Money) -> bool:
         """Check inequality of two Money objects (same currency only)"""
         if not isinstance(other, Money):
-            return TypeError("Comparison must be with another Money instance")
+            raise TypeError("Comparison must be with another Money instance")
         return not self.__eq__(other)
 
-    def __lt__(self, other: Money) -> bool | ValueError:
+    def __lt__(self, other: Money) -> bool:
         """Check if this Money is less than another (same currency only)"""
         if self.currency_code != other.currency_code:
             raise ValueError(f"Cannot compare {self.currency_code} with {other.currency_code}")
         return self.money < other.money
 
-    def __le__(self, other: Money) -> bool | ValueError:
+    def __le__(self, other: Money) -> bool:
         """Check if this Money is less than or equal to another (same currency only)"""
         if self.currency_code != other.currency_code:
             raise ValueError(f"Cannot compare {self.currency_code} with {other.currency_code}")
         return self.money <= other.money
 
-    def __gt__(self, other: Money) -> bool | ValueError:
+    def __gt__(self, other: Money) -> bool:
         """Check if this Money is greater than another (same currency only)"""
         if self.currency_code != other.currency_code:
             raise ValueError(f"Cannot compare {self.currency_code} with {other.currency_code}")
         return self.money > other.money
 
-    def __ge__(self, other: Money) -> bool | ValueError:
+    def __ge__(self, other: Money) -> bool:
         """Check if this Money is greater than or equal to another (same currency only)"""
         if self.currency_code != other.currency_code:
             raise ValueError(f"Cannot compare {self.currency_code} with {other.currency_code}")
         return self.money >= other.money
 
-    def __add__(self, other: Money) -> MoneyedMoney | ValueError:
+    def __add__(self, other: Money) -> MoneyedMoney:
         """Add two Money objects (same currency only)"""
 
         if self.currency_code != other.currency_code:
             raise ValueError(f"Cannot add {self.currency_code} to {other.currency_code}")
         return self.money + other.money
 
-    def __sub__(self, other: Money) -> MoneyedMoney | ValueError:
+    def __sub__(self, other: Money) -> MoneyedMoney:
         """Subtract two Money objects (same currency only)"""
 
         if self.currency_code != other.currency_code:
             raise ValueError(f"Cannot subtract {self.currency_code} from {other.currency_code}")
         return self.money - other.money
 
-    def __mul__(self, multiplier: Decimal | float | int) -> MoneyedMoney | TypeError:
+    def __mul__(self, multiplier: Decimal | float | int) -> MoneyedMoney:
         """Multiply Money by a number"""
 
         if not isinstance(multiplier, (Decimal, float, int)):
             raise TypeError("Multiplier must be a number")
         return self.money * Decimal(multiplier)
 
-    def __truediv__(self, divisor: Decimal | float | int) -> MoneyedMoney | TypeError | ValueError:
+    def __truediv__(self, divisor: Decimal | float | int) -> MoneyedMoney:
         """Divide Money by a number"""
 
         if not isinstance(divisor, (Decimal, float, int)):
