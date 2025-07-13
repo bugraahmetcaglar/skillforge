@@ -51,7 +51,7 @@ urlpatterns = [
     path("api/v1/finance/", include("apps.finance.urls")),
 
     # Reminder API endpoints
-    path("api/v1/", include("apps.thirdparty.urls")),
+    path("api/v1/thirdparty/", include("apps.thirdparty.urls")),
 
     # Contacts API endpoints
     path("api/v1/contact/", include("apps.contact.urls")),
