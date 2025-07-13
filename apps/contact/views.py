@@ -1,5 +1,6 @@
 import logging
 
+from django.db import models
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, permissions
 from rest_framework.parsers import MultiPartParser
@@ -15,6 +16,7 @@ from apps.contact.serializers import (
     ContactDuplicateSerializer,
 )
 from apps.contact.services import VCardImportService
+from apps.user.models import User
 from core.permissions import IsOwner
 from core.views import BaseAPIView, BaseListAPIView, BaseRetrieveAPIView
 
@@ -30,20 +32,19 @@ class VCardImportAPIView(BaseAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        service = VCardImportService(user=request.user)
         try:
-            service = VCardImportService(user=request.user)
-            results = service.import_from_file(serializer.validated_data["vcard_file"])
-
+            result = service.import_from_file(serializer.validated_data["vcard_file"])
             return self.success_response(
-                data=results,
-                message=f"Imported {results['imported_count']} of {results['total_processed']} contacts",
+                data=result,
+                message=f"Imported {result.get('imported_count'), 0} of {result.get('total_processed', 0)} contacts",
                 status_code=status.HTTP_201_CREATED,
             )
-        except ValueError as e:
-            return self.error_response(str(e), status_code=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            logger.error(f"Import error: {e}")
-            return self.error_response("Import failed", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except ValueError as err:
+            return self.error_response(str(err), status_code=status.HTTP_400_BAD_REQUEST)
+        except Exception as err:
+            logger.error(f"Import error: {err}")
+            return self.error_response(f"Import error: {err}", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class ContactListAPIView(BaseListAPIView):
@@ -77,12 +78,12 @@ class ContactListAPIView(BaseListAPIView):
     serializer_class = ContactSerializer
     permission_classes = [IsOwner]
     filterset_class = ContactFilter
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter] # type: ignore
     search_fields = ["first_name", "last_name", "email", "mobile_phone", "organization"]
     ordering_fields = ["created_at", "first_name", "last_name", "organization", "imported_at"]
 
     def get_queryset(self):
-        logger.info(f"Fetching contacts for user {self.request.user.id}")
+        logger.info(f"Fetching contacts for user {self.request.user.pk}")
         return Contact.objects.filter(user=self.request.user, is_active=True).select_related("user")
 
 
@@ -136,10 +137,14 @@ class ContactDuplicateListAPIView(BaseListAPIView):
     serializer_class = ContactDuplicateSerializer
     permission_classes = [IsOwner]
     filterset_class = ContactDuplicateFilter
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter] # type: ignore
 
-    def get_queryset(self):
+    def get_queryset(self) -> models.QuerySet:
         """Get duplicate contacts using Contact manager's duplicate_numbers method"""
-        logger.info(f"Fetching duplicate contacts for user {self.request.user.id}")
+        logger.info(f"Fetching duplicate contacts for user {self.request.user.pk}")
 
-        return Contact.objects.duplicate_numbers(user=self.request.user)
+        user_id = self.request.user.pk
+        if not user_id:
+            return Contact.objects.none()
+        return Contact.contact_manager.duplicate_numbers(user_id=user_id)
+    

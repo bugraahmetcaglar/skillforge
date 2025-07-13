@@ -27,15 +27,14 @@ class VCardImportService:
     def import_from_file(self, vcard_file: Any) -> dict[str, Any]:
         try:
             content = vcard_file.read().decode("utf-8")
-            parser = VCardParser()
-            contacts = parser.parse(content)
+            contacts = VCardParser().parse(content)
             return self._save_contacts(contacts)
         except UnicodeDecodeError:
             logger.exception("Failed to decode vCard file, trying alternative encoding")
-            raise ValueError("Invalid file encoding")
-        except Exception as e:
-            logger.exception(f"Import error: {e}")
-            raise ValueError(f"Import failed: {e}")
+            return {}
+        except Exception as err:
+            logger.exception(f"Import error: {err}")
+            return {}
 
     def _save_contacts(self, contacts: list[dict]) -> dict[str, Any]:
         imported_count = failed_count = 0

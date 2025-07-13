@@ -18,11 +18,11 @@ class DatabaseLogHandler(logging.Handler):
             # Get request context from middleware
             request_context = getattr(self.local, "request_context", {})
 
-            # Create and save log entry
             LogEntry.create_from_log_record(record, request_context)
 
-        except Exception as e:
+        except Exception as err:
             # Don't break the application if logging fails
+            logging.error(f"Failed to log record to database: {err}", exc_info=True)
             self.handleError(record)
 
     def set_request_context(self, **context):

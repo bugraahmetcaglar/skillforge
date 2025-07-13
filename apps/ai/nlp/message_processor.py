@@ -49,7 +49,7 @@ class TelegramMessageProcessor:
         processed = ProcessedMessage(
             original_text=message_text,
             cleaned_text=cleaned_text,
-            intent=intent_result.get("intent"),
+            intent=intent_result.get("intent", "unknown"),
             confidence=intent_result.get("confidence", 0.0),
             entities=entities,
             pattern_id=intent_result.get("pattern_id"),

@@ -246,6 +246,10 @@ Q_CLUSTER = {
     "catch_up": True,  # Catch up on missed scheduled tasks
     "retry": 120,  # Retry failed tasks after this many seconds
     "max_attempts": 3,  # Maximum retry attempts
+    "error_reporter": {
+        "apps.log.tasks.cleanup_old_logs": "apps.log.tasks.cleanup_task_hook",
+        "apps.log.tasks.warm_log_cache": "apps.log.tasks.cache_warming_task_hook",
+    },
 }
 
 LOGGING = {
@@ -263,33 +267,24 @@ LOGGING = {
     },
     "handlers": {
         "console": {
-            "level": "DEBUG",
+            "level": "WARNING",
             "class": "logging.StreamHandler",
             "formatter": "simple",
         },
         "database": {
-            "level": "INFO",
+            "level": "WARNING",  # ERROR, WARNING, CRITICAL
             "class": "apps.log.handlers.DatabaseLogHandler",
         },
-    },
-    "root": {
-        "handlers": ["console"],
-        "level": "WARNING",
     },
     "loggers": {
         "django": {
             "handlers": ["console", "database"],
-            "level": "INFO",
+            "level": "WARNING",
             "propagate": False,
         },
         "apps": {
             "handlers": ["console", "database"],
-            "level": "DEBUG",
-            "propagate": False,
-        },
-        "core": {
-            "handlers": ["console", "database"],
-            "level": "DEBUG",
+            "level": "WARNING",
             "propagate": False,
         },
     },

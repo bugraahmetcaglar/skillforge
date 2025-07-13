@@ -1,15 +1,18 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 from rest_framework import serializers
 
-from apps.contact.models import Contact, ContactBackup
-from core.views import BaseRetrieveAPIView
+from apps.contact.models import Contact
+
+logger = logging.getLogger(__name__)
 
 
 class VCardImportSerializer(serializers.Serializer):
     vcard_file = serializers.FileField(help_text="vCard file (.vcf or .vcard)", allow_empty_file=False)
 
+    # TODO: Type hinting for file validation
     def validate_vcard_file(self, value) -> Any:
         """Validate uploaded vCard file"""
 
@@ -43,13 +46,13 @@ class VCardImportSerializer(serializers.Serializer):
 
         except UnicodeDecodeError:
             raise serializers.ValidationError("Invalid file encoding. File must be UTF-8 encoded.")
-        except Exception as e:
-            raise serializers.ValidationError(f"Error reading file: {str(e)}")
+        except Exception as err:
+            logger.exception("Error reading vCard file", exc_info=True)
+            raise serializers.ValidationError(f"Error reading file: {str(err)}")
         return value
 
 
 class ContactSerializer(serializers.ModelSerializer):
-
     display_name = serializers.SerializerMethodField()
     primary_phone = serializers.SerializerMethodField()
     contact_age = serializers.SerializerMethodField()

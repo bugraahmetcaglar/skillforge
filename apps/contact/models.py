@@ -12,18 +12,18 @@ from apps.user.models import User
 
 
 class ContactManager(models.Manager):
-    def duplicate_numbers(self, user: User) -> models.QuerySet:
+    def duplicate_numbers(self, user_id: int) -> models.QuerySet[Contact, Contact]:
         """Find duplicate phone numbers with details"""
 
         return (
-            self.filter(user=user, is_active=True, mobile_phone__isnull=False)
+            self.filter(user_id=user_id, is_active=True, mobile_phone__isnull=False)
             .exclude(mobile_phone="")
             .annotate(
                 # Count duplicates for each mobile phone number
-                phone_count=models.Window(expression=models.Count("mobile_phone"), partition_by=["mobile_phone"]),
+                phone_count=models.Window(expression=models.Count("mobile_phone"), partition_by=["mobile_phone"]), # type: ignore
                 # Rank by creation date (1 = primary/oldest)
                 contact_rank=models.Window(
-                    expression=RowNumber(), partition_by=["mobile_phone"], order_by=["created_at"]
+                    expression=RowNumber(), partition_by=["mobile_phone"], order_by=["created_at"] # type: ignore
                 ),
             )
             .filter(phone_count__gt=1)
@@ -100,7 +100,7 @@ class Contact(BaseModel):
 
     deactivated_at = models.DateTimeField(blank=True, null=True)
 
-    objects = ContactManager()
+    contact_manager = ContactManager()
 
     class Meta:
         unique_together = [["user", "external_id", "import_source"]]

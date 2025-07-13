@@ -92,8 +92,8 @@ def save_contacts_task(user_id: int, contacts: list[dict]) -> dict[str, Any]:
         error_msg = f"User with ID {user_id} not found"
         logger.error(error_msg)
         raise ValueError(error_msg)
-    except Exception as e:
-        logger.error(f"Contact saving task failed for user {user_id}: {e}")
+    except Exception as err:
+        logger.error(f"Contact saving task failed for user {user_id}: {err}")
         raise
 
 
@@ -193,57 +193,3 @@ def setup_periodic_tasks():
     )
 
     logger.info("Periodic tasks scheduled successfully")
-
-
-def send_email_notification(user_email: str, subject: str, message: str) -> bool:
-    """Send email notification task
-
-    Args:
-        user_email: Recipient email
-        subject: Email subject
-        message: Email message
-
-    Returns:
-        bool: Success status
-    """
-    try:
-        from django.core.mail import send_mail
-        from django.conf import settings
-
-        send_mail(
-            subject=subject,
-            message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user_email],
-            fail_silently=False,
-        )
-
-        logger.info(f"Email sent successfully to {user_email}")
-        return True
-
-    except Exception as e:
-        logger.error(f"Failed to send email to {user_email}: {e}")
-        raise
-
-
-def enqueue_email_notification(user_email: str, subject: str, message: str) -> str:
-    """Enqueue email notification task"""
-    task_id = async_task(
-        "apps.contact.tasks.send_email_notification",
-        user_email,
-        subject,
-        message,
-        task_name=f"email_notification_{user_email}",
-        timeout=60,
-        hook="apps.contact.tasks.email_notification_hook",
-    )
-
-    return task_id
-
-
-def email_notification_hook(task):
-    """Hook for email notification task"""
-    if task.success:
-        logger.info(f"Email notification task {task.id} completed")
-    else:
-        logger.error(f"Email notification task {task.id} failed: {task.result}")
