@@ -37,7 +37,7 @@ class VCardImportAPIView(BaseAPIView):
             result = service.import_from_file(serializer.validated_data["vcard_file"])
             return self.success_response(
                 data=result,
-                message=f"Imported {result.get('imported_count'), 0} of {result.get('total_processed', 0)} contacts",
+                message=f"Imported {result.get('imported_count', 0)} of {result.get('total_processed', 0)} contacts",
                 status_code=status.HTTP_201_CREATED,
             )
         except ValueError as err:
