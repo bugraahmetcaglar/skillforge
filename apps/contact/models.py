@@ -12,11 +12,11 @@ from apps.user.models import User
 
 
 class ContactManager(models.Manager):
-    def duplicate_numbers(self, owner: User) -> models.QuerySet:
+    def duplicate_numbers(self, user: User) -> models.QuerySet:
         """Find duplicate phone numbers with details"""
 
         return (
-            self.filter(owner=owner, is_active=True, mobile_phone__isnull=False)
+            self.filter(user=user, is_active=True, mobile_phone__isnull=False)
             .exclude(mobile_phone="")
             .annotate(
                 # Count duplicates for each mobile phone number
@@ -46,7 +46,7 @@ class Contact(BaseModel):
     """Model for storing contact information imported from various sources."""
 
     # Relationship to the user who owns this contact
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="contacts")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="contacts")
 
     # Basic information
     first_name = NullableCharField()
@@ -103,7 +103,7 @@ class Contact(BaseModel):
     objects = ContactManager()
 
     class Meta:
-        unique_together = [["owner", "external_id", "import_source"]]
+        unique_together = [["user", "external_id", "import_source"]]
         ordering = ["first_name", "middle_name", "last_name"]
 
     def __str__(self) -> str:
@@ -118,14 +118,14 @@ class Contact(BaseModel):
         # Create a backup copy
         ContactBackup.objects.create(
             contact_id=str(self.pk),
-            owner=self.owner,
+            user=self.user,
             contact_data=model_to_dict(self),
         )
 
     @classmethod
-    def search(cls, owner: User, keyword: str) -> models.QuerySet:
+    def search(cls, user: User, keyword: str) -> models.QuerySet:
         return cls.objects.filter(
-            owner=owner,
+            user=user,
             is_active=True,
         ).filter(
             models.Q(first_name__icontains=keyword)
@@ -153,7 +153,7 @@ class ContactBackup(BaseModel):
         null=True,
         blank=True,
     )
-    owner = models.ForeignKey(
+    user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name="contact_backups",
@@ -183,4 +183,4 @@ class ContactBackup(BaseModel):
             self.save(update_fields=["is_active", "last_updated"])
             return self.contact
         else:
-            Contact.objects.create(owner=self.owner, **model_to_dict(self))
+            Contact.objects.create(user=self.user, **model_to_dict(self))

@@ -21,8 +21,6 @@ class IsOwnerOrAdmin(permissions.BasePermission):
 
             if hasattr(obj, "user"):
                 return obj.user == user
-            elif hasattr(obj, "owner"):
-                return obj.owner == user
 
             return obj == user
         except Exception as err:
@@ -39,8 +37,6 @@ class IsOwner(permissions.BasePermission):
 
             if hasattr(obj, "user"):
                 return obj.user == user
-            elif hasattr(obj, "owner"):
-                return obj.owner == user
 
             return obj == user
         except Exception as err:

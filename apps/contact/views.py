@@ -10,8 +10,7 @@ from rest_framework.response import Response
 from apps.contact.filter import ContactDuplicateFilter, ContactFilter
 from apps.contact.models import Contact
 from apps.contact.serializers import (
-    ContactDetailSerializer,
-    ContactListSerializer,
+    ContactSerializer,
     VCardImportSerializer,
     ContactDuplicateSerializer,
 )
@@ -75,7 +74,7 @@ class ContactListAPIView(BaseListAPIView):
     - /api/v1/contact/list?created_after=2024-01-01&ordering=-created_at
     """
 
-    serializer_class = ContactListSerializer
+    serializer_class = ContactSerializer
     permission_classes = [IsOwner]
     filterset_class = ContactFilter
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -84,7 +83,7 @@ class ContactListAPIView(BaseListAPIView):
 
     def get_queryset(self):
         logger.info(f"Fetching contacts for user {self.request.user.id}")
-        return Contact.objects.filter(owner=self.request.user, is_active=True).select_related("owner")
+        return Contact.objects.filter(user=self.request.user, is_active=True).select_related("user")
 
 
 class ContactDetailAPIView(BaseRetrieveAPIView):
@@ -98,7 +97,7 @@ class ContactDetailAPIView(BaseRetrieveAPIView):
     - Rich phone number presentation
 
     Returns:
-    - All contact fields except sensitive data (owner, external_id)
+    - All contact fields except sensitive data (user, external_id)
     - display_name: Formatted full name or fallback
     - contact_age: Calculated age from birthday
 
@@ -106,13 +105,13 @@ class ContactDetailAPIView(BaseRetrieveAPIView):
     Method: GET
     """
 
-    serializer_class = ContactDetailSerializer
+    serializer_class = ContactSerializer
     permission_classes = [IsOwner]
     lookup_field = "pk"
 
     def get_queryset(self):
         """Get active contacts for the authenticated user only"""
-        return Contact.objects.filter(owner=self.request.user, is_active=True).select_related("owner")
+        return Contact.objects.filter(user=self.request.user, is_active=True).select_related("user")
 
     def retrieve(self, request, *args, **kwargs):
         """Override to add custom response format and logging"""
@@ -143,4 +142,4 @@ class ContactDuplicateListAPIView(BaseListAPIView):
         """Get duplicate contacts using Contact manager's duplicate_numbers method"""
         logger.info(f"Fetching duplicate contacts for user {self.request.user.id}")
 
-        return Contact.objects.duplicate_numbers(owner=self.request.user)
+        return Contact.objects.duplicate_numbers(user=self.request.user)

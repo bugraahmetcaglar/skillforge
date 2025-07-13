@@ -43,7 +43,7 @@ class VCardImportService:
 
         for i, data in enumerate(contacts):
             try:
-                data.update({"owner": self.user, "import_source": "vcard"})
+                data.update({"user": self.user, "import_source": "vcard"})
 
                 # Skip completely empty contacts
                 if not any(data.get(f) for f in ["first_name", "last_name", "full_name", "email", "mobile_phone"]):

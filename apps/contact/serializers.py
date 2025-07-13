@@ -48,7 +48,7 @@ class VCardImportSerializer(serializers.Serializer):
         return value
 
 
-class ContactListSerializer(serializers.ModelSerializer):
+class ContactSerializer(serializers.ModelSerializer):
 
     display_name = serializers.SerializerMethodField()
     primary_phone = serializers.SerializerMethodField()
@@ -56,7 +56,7 @@ class ContactListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Contact
-        exclude = ("owner", "is_active", "deactivated_at", "external_id")
+        exclude = ("user", "is_active", "deactivated_at", "external_id")
 
     def get_display_name(self, obj: Contact) -> str:
         if obj.full_name:
@@ -80,34 +80,6 @@ class ContactListSerializer(serializers.ModelSerializer):
         return today.year - obj.birthday.year - ((today.month, today.day) < (obj.birthday.month, obj.birthday.day))
 
 
-class ContactDetailSerializer(serializers.ModelSerializer):
-
-    display_name = serializers.SerializerMethodField()
-    contact_age = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Contact
-        exclude = ["owner", "external_id"]
-
-    def get_display_name(self, obj: Contact) -> str:
-        """Get formatted display name"""
-        if obj.full_name:
-            return obj.full_name
-        if obj.first_name or obj.last_name:
-            return f"{obj.first_name} {obj.last_name}".strip()
-        return "Unknown Contact"
-
-    def get_contact_age(self, obj: Contact) -> int | None:
-        """Calculate contact age if birthday exists"""
-        if not obj.birthday:
-            return None
-
-        from datetime import date
-
-        today = date.today()
-        return today.year - obj.birthday.year - ((today.month, today.day) < (obj.birthday.month, obj.birthday.day))
-
-
 class ContactBackupCreateSerializer(serializers.ModelSerializer):
     """ModelSerializer for creating new contacts"""
 
@@ -116,7 +88,7 @@ class ContactBackupCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Contact
-        exclude = ["id", "owner"]
+        exclude = ["id", "user"]
 
 
 class ContactDuplicateSerializer(serializers.ModelSerializer):

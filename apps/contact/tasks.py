@@ -57,7 +57,7 @@ def save_contacts_task(user_id: int, contacts: list[dict]) -> dict[str, Any]:
 
         for i, data in enumerate(contacts):
             try:
-                data.update({"owner": user, "import_source": "vcard"})
+                data.update({"user": user, "import_source": "vcard"})
 
                 # Skip completely empty contacts
                 if not any(data.get(f) for f in ["first_name", "last_name", "full_name", "email", "mobile_phone"]):
