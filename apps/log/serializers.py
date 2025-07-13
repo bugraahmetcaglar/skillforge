@@ -28,7 +28,7 @@ class LogEntrySerializer(serializers.ModelSerializer):
         ]
 
     def get_formatted_timestamp(self, obj) -> str:
-        return obj.timestamp.strftime("%Y-%M-%d %H:%M:%S")
+        return obj.timestamp.strftime("%Y-%m-%d %H:%M:%S")
 
     def get_short_message(self, obj) -> str:
         return obj.message[:100] + "..." if len(obj.message) > 100 else obj.message
