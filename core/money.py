@@ -29,15 +29,14 @@ class Money:
 
     def __init__(self, amount: Decimal | float | str, currency: str = CurrencyChoices.TRY):
         """Initialize Money object"""
-        if hasattr(self, "money"):
-            # Prevent re-initialization if already created
-            return
-        if not isinstance(amount, (Decimal, float, str)):
-            raise TypeError("Amount must be a Decimal, float, or str")
-
-        self.money = MoneyedMoney(amount=Decimal(str(amount)), currency=Currency(currency))
-
-        return self
+        if not hasattr(self, 'money'):
+            self.money = MoneyedMoney(amount=Decimal(amount), currency=Currency(currency))
+        if not isinstance(self.money, MoneyedMoney):
+            raise TypeError("money must be an instance of MoneyedMoney")
+        if self.money.amount < 0:
+            raise ValueError("Amount cannot be negative")
+        if self.money.currency.code != currency:
+            raise ValueError(f"Currency mismatch: expected {currency}, got {self.money.currency.code}")
 
     @property
     def amount(self) -> Decimal:
