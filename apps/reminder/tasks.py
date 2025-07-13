@@ -152,11 +152,18 @@ def next_month_subscription_expense_report():
                 base_currency=user_subscription.currency,
                 target_currency=CurrencyChoices.TRY,
             )
+        else:
+            conversion_rate = Decimal("1.00")
+        
+        total_amount += user_subscription.amount * conversion_rate
 
-        total_amount += user_subscription.amount * (conversion_rate or Decimal("1.00"))
-
-    message += f"• <b>Total Amount:</b> {total_amount} 'TRY'\n"
+    message += f"• <b>Next Month's Total Amount:</b> {total_amount} 'TRY'\n"
     message += "\n"
+    message += "💰 <b>Next Month's Subscription Amount:</b>\n\n"
+    message += f"• <b>Next Month's Total Amount:</b> {total_amount} 'TRY'\n"
+    message += "\n"
+
+
     TelegramReminderAPI().send_message(message)
 
     return "succesfull"
