@@ -104,7 +104,7 @@ class ContactAdmin(admin.ModelAdmin):
 
         context = {
             "title": "Contact Analytics",
-            "duplicate_count": Contact.contact_manager.duplicate_numbers(request.user).count(),
+            "duplicate_count": Contact.contact_manager.duplicate_numbers(request.user.pk).count(),
             "source_stats": source_stats,
             "org_stats": org_stats,
             "total_contacts": stats["total_contacts"],
