@@ -7,6 +7,8 @@ from skillforge.settings.base import *  # noqa
 # Override SECRET_KEY for tests
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-test-key-for-testing-only')
 
+DEBUG = False
+
 # Set test database to in-memory SQLite for faster tests
 DATABASES = {
     "default": {
@@ -34,6 +36,9 @@ CACHES = {
     }
 }
 
+# Use console email backend
+EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+
 # Turn off non-essential middleware
 MIDDLEWARE = [m for m in MIDDLEWARE if "debug" not in m.lower()]
 
@@ -53,6 +58,11 @@ LOGGING = {
         },
     },
 }
+
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.MD5PasswordHasher",
+]
+
 
 # Celery settings for tests
 CELERY_TASK_ALWAYS_EAGER = True
