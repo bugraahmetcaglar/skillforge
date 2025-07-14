@@ -17,7 +17,7 @@ def register_user_payload() -> dict:
         dict: Valid registration data
     """
     return {
-        "username": "newuser",
+        "username": "newuser@example.com",
         "email": "newuser@example.com",
         "first_name": "New",
         "last_name": "User",
@@ -43,12 +43,12 @@ def register_user(api_client: APIClient, register_user_payload: dict) -> dict:
 
 
 @pytest.fixture
-def login_user(api_client: APIClient, user_with_credentials, user_credentials) -> dict:
+def login_user(api_client: APIClient, user, user_credentials) -> dict:
     """Fixture to login a user and return the auth tokens.
 
     Args:
         api_client: API client fixture
-        user_with_credentials: User with known credentials
+        user: User with known credentials
         user_credentials: Username and password
 
     Returns:

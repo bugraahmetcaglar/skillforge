@@ -64,8 +64,8 @@ class TestUserRegistrationAPI:
         """Test that registration fails with an existing username."""
         url = reverse("v1_user_register")
         duplicate_data = {
-            "username": user.username,  # Existing username
-            "email": "another@example.com",
+            "username": "user@example.com",  # Existing username
+            "email": "user@example.com",
             "first_name": "Another",
             "last_name": "User",
             "password": "StrongP@ssw0rd",
@@ -92,7 +92,7 @@ class TestUserRegistrationAPI:
 class TestUserAuthenticationAPI:
     """E2E tests for the user authentication API."""
 
-    def test_user_can_login(self, api_client, user_with_credentials, user_credentials):
+    def test_user_can_login(self, api_client, user, user_credentials):
         """Test that a user can login with valid credentials."""
         url = reverse("token_obtain_pair")
         response = api_client.post(url, user_credentials, format="json")
@@ -101,13 +101,13 @@ class TestUserAuthenticationAPI:
         assert "access" in response.data
         assert "refresh" in response.data
 
-    def test_login_with_invalid_credentials(self, api_client, user_with_credentials):
+    def test_login_with_invalid_credentials(self, api_client, user):
         """Test that login fails with invalid credentials."""
         url = reverse("token_obtain_pair")
 
         # Test with wrong password
         invalid_credentials = {
-            "username": user_with_credentials.username,
+            "username": user.username,
             "password": "WrongPassword",
         }
         response = api_client.post(url, invalid_credentials, format="json")

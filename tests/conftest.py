@@ -63,31 +63,9 @@ def user_credentials() -> dict:
         dict: Username and password for authentication
     """
     return {
-        "username": "testuser",
-        "password": "StrongP@ssw0rd",
+        "username": "user@example.com",
+        "password": "Password123!",
     }
-
-
-@pytest.fixture
-def user_with_credentials(db, user_credentials: dict) -> User:
-    """Fixture to provide a user with known credentials.
-
-    Args:
-        user_credentials: Dictionary containing username and password
-
-    Returns:
-        User: User with the provided credentials
-    """
-    user = baker.make(
-        "user.User",
-        username=user_credentials["username"],
-        email="test@example.com",
-        first_name="Test",
-        last_name="User",
-    )
-    user.set_password(user_credentials["password"])
-    user.save()
-    return user
 
 
 @pytest.fixture
@@ -99,7 +77,7 @@ def user(db) -> User:
     """
     user = baker.make(
         User,
-        username="regular_user",
+        username="user@example.com",
         email="user@example.com",
         first_name="Regular",
         last_name="User",

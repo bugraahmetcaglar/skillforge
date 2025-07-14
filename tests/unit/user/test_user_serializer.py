@@ -27,7 +27,7 @@ class TestUserSerializer:
     def test_user_serializer_fields(self):
         """Test that UserSerializer has the expected fields."""
         serializer = UserSerializer()
-        expected_fields = {"username", "email", "first_name", "last_name", "password"}
+        expected_fields = {"email", "first_name", "last_name", "password"}
         assert set(serializer.fields.keys()) == expected_fields
 
         # Check that password is write_only
