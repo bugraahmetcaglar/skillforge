@@ -19,7 +19,7 @@ class ContactAdminForm(forms.ModelForm):
 
     class Meta:
         model = Contact
-        exclude = ("owner", "external_id", "imported_at", "created_at", "last_updated")
+        exclude = ("user", "external_id", "imported_at", "created_at", "last_updated")
 
 
 @admin.register(Contact)
@@ -45,9 +45,9 @@ class ContactAdmin(admin.ModelAdmin):
     )
 
     def save_model(self, request, obj, form, change):
-        """Auto-set owner to current user if not set"""
-        if not obj.owner_id:
-            obj.owner = request.user
+        """Auto-set user's to current user if not set"""
+        if not obj.user:
+            obj.user = request.user
         super().save_model(request, obj, form, change)
 
     def create_backup_action(self, request, queryset):
@@ -55,7 +55,7 @@ class ContactAdmin(admin.ModelAdmin):
         for contact in queryset:
             ContactBackup.objects.create(
                 contact=contact,
-                owner=contact.owner,
+                user=contact.user,
                 contact_data=model_to_dict(contact),
             )
             backup_count += 1
@@ -104,7 +104,7 @@ class ContactAdmin(admin.ModelAdmin):
 
         context = {
             "title": "Contact Analytics",
-            "duplicate_count": Contact.objects.duplicate_numbers(request.user).count(),
+            "duplicate_count": Contact.contact_manager.duplicate_numbers(request.user.pk).count(),
             "source_stats": source_stats,
             "org_stats": org_stats,
             "total_contacts": stats["total_contacts"],
@@ -118,20 +118,20 @@ class ContactAdmin(admin.ModelAdmin):
     def bulk_backup_view(self, request):
         """Custom admin action to create backups for selected contacts"""
         if request.method == "POST":
-            contacts = Contact.objects.filter(is_active=True, owner=request.user).select_related("owner").order_by("id")
+            contacts = Contact.objects.filter(is_active=True, user=request.user).select_related("user").order_by("id")
             success_ids, fail_ids = [], []
 
             for contact in contacts:
                 try:
                     dict_contact = model_to_dict(contact)
                     contact_id = dict_contact.pop("id")
-                    owner_id = dict_contact.pop("owner")
+                    user_id = dict_contact.pop("user")
 
                     for key, value in dict_contact.items():
                         if isinstance(value, (datetime.datetime, datetime.date)):
                             dict_contact[key] = value.isoformat()
 
-                    ContactBackup.objects.create(contact=contact, owner_id=owner_id, contact_data=dict_contact)
+                    ContactBackup.objects.create(contact=contact, user_id=user_id, contact_data=dict_contact)
                     success_ids.append(contact_id)
                 except Exception as err:
                     logger.exception(f"Error creating backups: {err}, Contact ID: {getattr(contact, "id", "Unknown")} data: {contact}")
@@ -156,9 +156,9 @@ class ContactAdmin(admin.ModelAdmin):
 
 @admin.register(ContactBackup)
 class ContactBackupAdmin(admin.ModelAdmin):
-    list_display = ["owner", "created_at", "is_active"]
+    list_display = ["created_at", "is_active"]
     list_filter = ["is_active", "created_at"]
-    search_fields = ["owner__username", "owner__email"]
+    search_fields = ["user__username", "user__email"]
     readonly_fields = ["contact", "contact_data", "created_at", "last_updated"]
 
     def has_add_permission(self, request):

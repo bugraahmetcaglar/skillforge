@@ -1,0 +1,59 @@
+{
+  "next_month": [
+    "gelecek ay",
+    "sonraki ay", 
+    "bir sonraki ay",
+    "önümüzdeki ay",
+    "ileriki ay"
+  ],
+  "current_month": [
+    "bu ay",
+    "şu ay", 
+    "şimdiki ay",
+    "şu an",
+    "mevcut ay",
+    "bu ayki"
+  ],
+  "next_week": [
+    "gelecek hafta",
+    "sonraki hafta",
+    "bir sonraki hafta",
+    "önümüzdeki hafta"
+  ],
+  "current_week": [
+    "bu hafta",
+    "şu hafta",
+    "şimdiki hafta"
+  ],
+  "next_year": [
+    "gelecek yıl",
+    "gelecek sene",
+    "sonraki yıl",
+    "bir sonraki yıl"
+  ],
+  "current_year": [
+    "bu yıl",
+    "bu sene",
+    "şu yıl"
+  ],
+  "today": [
+    "bugün",
+    "bu gün"
+  ],
+  "tomorrow": [
+    "yarın"
+  ],
+  "yesterday": [
+    "dün"
+  ],
+  "this_week": [
+    "bu hafta içinde",
+    "hafta içi",
+    "bu haftada"
+  ],
+  "next_quarter": [
+    "gelecek çeyrek",
+    "sonraki çeyrek",
+    "önümüzdeki çeyrek"
+  ]
+}

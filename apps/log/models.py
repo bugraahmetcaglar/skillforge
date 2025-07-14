@@ -1,13 +1,14 @@
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 import logging
 
 from django.db import models
+from django.db.models import Q
 from django.utils import timezone
 from typing import Dict
 
 from apps.log.enums import LogLevel
-from apps.user.models import User
 from core.enums import Environment
 from core.models import BaseModel
 
@@ -33,7 +34,7 @@ class LogEntry(BaseModel):
     user = models.ForeignKey(
         "user.User", null=True, blank=True, on_delete=models.DO_NOTHING, related_name="log_entries"
     )
-    request_id = models.CharField(max_length=36, blank=True, db_index=True)  # UUID
+    request_id = models.CharField(max_length=36, blank=True, db_index=True)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     user_agent = models.TextField(blank=True)
     request_method = models.CharField(max_length=10, blank=True)
@@ -53,14 +54,58 @@ class LogEntry(BaseModel):
     extra_data = models.JSONField(default=dict, blank=True)
     exception_info = models.TextField(blank=True)
 
+    class Meta:
+        indexes = [
+            # Compound indexes for common searches
+            models.Index(fields=['level', '-timestamp']),
+            models.Index(fields=['logger_name', '-timestamp']),
+            models.Index(fields=['user', '-timestamp']),
+            models.Index(fields=['app_name', 'level', '-timestamp']),
+            
+            # Performance indexes
+            models.Index(fields=['request_path', '-timestamp']),
+            models.Index(fields=['status_code', '-timestamp']),
+        ]
+        ordering = ['-timestamp']
+
     def __str__(self) -> str:
         return f"{self.level} - {self.logger_name} - {self.message[:50]}"
 
     @classmethod
-    def create_from_log_record(cls, record: logging.LogRecord, extra_context: Dict | None = None) -> LogEntry:
-        """Create LogEntry from Python logging.LogRecord"""
-        from datetime import datetime
+    def cleanup_old_logs(cls) -> bool:
+        """Clean up old logs based on retention policy"""
+        try:
+            now = timezone.now()
+            
+            # Critical keywords that should never be deleted
+            critical_keywords = [
+                'SecurityError', 'AuthenticationFailed', 'DatabaseError', 
+                'PaymentError', 'DataLoss', 'CRITICAL', 'SECURITY'
+            ]
+            
+            # Build exclusion query for critical logs
+            exclude_critical = Q()
+            for keyword in critical_keywords:
+                exclude_critical |= Q(message__icontains=keyword)
+            
+            cls.objects.annotate(
+                should_delete=models.Case(
+                    models.When(level='DEBUG', timestamp__lt=now - timedelta(days=7), then=True),
+                    models.When(level='INFO', timestamp__lt=now - timedelta(days=30), then=True),
+                    models.When(level='WARNING', timestamp__lt=now - timedelta(days=90), then=True),
+                    models.When(level='ERROR', timestamp__lt=now - timedelta(days=365), then=True),
+                    default=False,
+                )
+            ).filter(should_delete=True).exclude(exclude_critical).delete()
+            return True
 
+        except Exception as err:
+            logger.exception(f"Error during log cleanup: {err}")
+            return False
+
+    @classmethod
+    def create_from_log_record(cls, record: logging.LogRecord, extra_context: Dict | None = None):
+        """Create LogEntry from Python logging.LogRecord"""
         extra_context = extra_context or {}
 
         exception_info = ""
@@ -68,7 +113,6 @@ class LogEntry(BaseModel):
             exception_info = record.exc_text
         elif hasattr(record, "exc_info") and record.exc_info:
             import traceback
-
             exception_info = "".join(traceback.format_exception(*record.exc_info))
 
         return cls.objects.create(

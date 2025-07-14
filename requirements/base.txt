@@ -47,3 +47,8 @@ requests-mock==1.12.1  # https://github.com/jamielennox/requests-mock
 # vObject
 # ------------------------------------------------------------------------------
 vobject==0.9.6.1
+
+# AI
+
+# Money
+py-moneyed==3.0

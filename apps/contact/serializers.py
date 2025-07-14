@@ -1,15 +1,18 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 from rest_framework import serializers
 
-from apps.contact.models import Contact, ContactBackup
-from core.views import BaseRetrieveAPIView
+from apps.contact.models import Contact
+
+logger = logging.getLogger(__name__)
 
 
 class VCardImportSerializer(serializers.Serializer):
     vcard_file = serializers.FileField(help_text="vCard file (.vcf or .vcard)", allow_empty_file=False)
 
+    # TODO: Type hinting for file validation
     def validate_vcard_file(self, value) -> Any:
         """Validate uploaded vCard file"""
 
@@ -43,20 +46,20 @@ class VCardImportSerializer(serializers.Serializer):
 
         except UnicodeDecodeError:
             raise serializers.ValidationError("Invalid file encoding. File must be UTF-8 encoded.")
-        except Exception as e:
-            raise serializers.ValidationError(f"Error reading file: {str(e)}")
+        except Exception as err:
+            logger.exception("Error reading vCard file", exc_info=True)
+            raise serializers.ValidationError(f"Error reading file: {str(err)}")
         return value
 
 
-class ContactListSerializer(serializers.ModelSerializer):
-
+class ContactSerializer(serializers.ModelSerializer):
     display_name = serializers.SerializerMethodField()
     primary_phone = serializers.SerializerMethodField()
     contact_age = serializers.SerializerMethodField()
 
     class Meta:
         model = Contact
-        exclude = ("owner", "is_active", "deactivated_at", "external_id")
+        exclude = ("user", "is_active", "deactivated_at", "external_id")
 
     def get_display_name(self, obj: Contact) -> str:
         if obj.full_name:
@@ -80,34 +83,6 @@ class ContactListSerializer(serializers.ModelSerializer):
         return today.year - obj.birthday.year - ((today.month, today.day) < (obj.birthday.month, obj.birthday.day))
 
 
-class ContactDetailSerializer(serializers.ModelSerializer):
-
-    display_name = serializers.SerializerMethodField()
-    contact_age = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Contact
-        exclude = ["owner", "external_id"]
-
-    def get_display_name(self, obj: Contact) -> str:
-        """Get formatted display name"""
-        if obj.full_name:
-            return obj.full_name
-        if obj.first_name or obj.last_name:
-            return f"{obj.first_name} {obj.last_name}".strip()
-        return "Unknown Contact"
-
-    def get_contact_age(self, obj: Contact) -> int | None:
-        """Calculate contact age if birthday exists"""
-        if not obj.birthday:
-            return None
-
-        from datetime import date
-
-        today = date.today()
-        return today.year - obj.birthday.year - ((today.month, today.day) < (obj.birthday.month, obj.birthday.day))
-
-
 class ContactBackupCreateSerializer(serializers.ModelSerializer):
     """ModelSerializer for creating new contacts"""
 
@@ -116,7 +91,7 @@ class ContactBackupCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Contact
-        exclude = ["id", "owner"]
+        exclude = ["id", "user"]
 
 
 class ContactDuplicateSerializer(serializers.ModelSerializer):

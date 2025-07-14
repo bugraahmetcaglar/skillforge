@@ -50,6 +50,8 @@ LOCAL_APPS = [
     "apps.log",
     "apps.reminder",
     "apps.finance",
+    "apps.ai",
+    "apps.thirdparty",
 ]
 
 THIRD_PARTY_APPS = [
@@ -60,6 +62,7 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     "django_redis",
     "django_q",
+    "django_extensions",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS + THIRD_PARTY_APPS
@@ -244,6 +247,10 @@ Q_CLUSTER = {
     "catch_up": True,  # Catch up on missed scheduled tasks
     "retry": 120,  # Retry failed tasks after this many seconds
     "max_attempts": 3,  # Maximum retry attempts
+    "error_reporter": {
+        "apps.log.tasks.cleanup_old_logs": "apps.log.tasks.cleanup_task_hook",
+        "apps.log.tasks.warm_log_cache": "apps.log.tasks.cache_warming_task_hook",
+    },
 }
 
 LOGGING = {
@@ -261,37 +268,32 @@ LOGGING = {
     },
     "handlers": {
         "console": {
-            "level": "DEBUG",
+            "level": "WARNING",
             "class": "logging.StreamHandler",
             "formatter": "simple",
         },
         "database": {
-            "level": "INFO",
+            "level": "WARNING",  # ERROR, WARNING, CRITICAL
             "class": "apps.log.handlers.DatabaseLogHandler",
         },
-    },
-    "root": {
-        "handlers": ["console"],
-        "level": "WARNING",
     },
     "loggers": {
         "django": {
             "handlers": ["console", "database"],
-            "level": "INFO",
+            "level": "WARNING",
             "propagate": False,
         },
         "apps": {
             "handlers": ["console", "database"],
-            "level": "DEBUG",
-            "propagate": False,
-        },
-        "core": {
-            "handlers": ["console", "database"],
-            "level": "DEBUG",
+            "level": "WARNING",
             "propagate": False,
         },
     },
 }
 
+# Telegram Bot Configuration
 TELEGRAM_REMINDER_BOT_TOKEN = os.environ.get("TELEGRAM_REMINDER_BOT_TOKEN")
-TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
+TELEGRAM_REMINDER_CHAT_ID = os.environ.get("TELEGRAM_REMINDER_CHAT_ID")
+
+# Exchange Rate API Configuration
+EXCHANGE_RATE_API_KEY = os.environ.get("EXCHANGE_RATE_API_KEY")
