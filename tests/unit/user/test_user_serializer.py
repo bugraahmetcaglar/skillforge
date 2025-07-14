@@ -9,8 +9,8 @@ from apps.user.serializers import UserSerializer, UserLoginSerializer, TokenSeri
 def mock_user_data(user_credentials):
     """Fixture to provide mock user data for testing."""
     return {
-        "username": user_credentials["username"],
-        "email": user_credentials["username"],
+        "username": user_credentials["email"],
+        "email": user_credentials["email"],
         "password": user_credentials["password"],
         "first_name": "Test",
         "last_name": "User",
@@ -42,7 +42,7 @@ class TestUserLoginSerializer:
     def test_login_serializer_fields(self):
         """Test that UserLoginSerializer has the expected fields."""
         serializer = UserLoginSerializer()
-        expected_fields = {"username", "password"}
+        expected_fields = {"email", "password"}
         assert set(serializer.fields.keys()) == expected_fields
 
         # Check that password is write_only
@@ -51,12 +51,12 @@ class TestUserLoginSerializer:
     def test_login_serializer_validation(self):
         """Test validation of login data."""
         # Valid data
-        valid_data = {"username": "testuser", "password": "Password123!"}
+        valid_data = {"email": "testuser@email.com", "password": "Password123!"}
         serializer = UserLoginSerializer(data=valid_data)
         assert serializer.is_valid() is True
 
         # Missing fields
-        incomplete_data = {"username": "testuser"}
+        incomplete_data = {"email": "testuser"}
         serializer = UserLoginSerializer(data=incomplete_data)
         assert serializer.is_valid() is False
         assert "password" in serializer.errors

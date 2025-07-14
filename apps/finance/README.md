@@ -249,7 +249,7 @@ from apps.finance.models import UserSubscription, SubscriptionService
 from apps.user.models import User
 
 # Get user and service
-user = User.objects.get(username="john_doe")
+user = User.objects.get(username="john_doe@email.com")
 netflix = SubscriptionService.objects.get(name="Netflix")
 
 # Create subscription

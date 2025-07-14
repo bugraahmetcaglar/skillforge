@@ -46,7 +46,7 @@ class UserSubscriptionAdmin(admin.ModelAdmin):
         "status",
         "auto_renewal",
     )
-    search_fields = ("user__username", "service__name", "plan_name")
+    search_fields = ("user__email", "service__name", "plan_name")
     list_filter = ("status", "billing_cycle", "currency", "auto_renewal")
     ordering = ("-started_at",)
     readonly_fields = ("created_at", "last_updated")

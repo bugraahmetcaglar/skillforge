@@ -3,7 +3,7 @@ from apps.log.models import LogEntry
 
 
 class LogEntrySerializer(serializers.ModelSerializer):
-    user_username = serializers.CharField(source="user.username", read_only=True)
+    user_email = serializers.CharField(source="user.email", read_only=True)
     formatted_timestamp = serializers.SerializerMethodField()
     short_message = serializers.SerializerMethodField()
     has_exception = serializers.SerializerMethodField()
@@ -11,7 +11,6 @@ class LogEntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = LogEntry
         fields = [
-            "id",
             "timestamp",
             "formatted_timestamp",
             "level",
@@ -20,7 +19,7 @@ class LogEntrySerializer(serializers.ModelSerializer):
             "logger_name",
             "module",
             "function_name",
-            "user_username",
+            "user_email",
             "request_path",
             "status_code",
             "app_name",

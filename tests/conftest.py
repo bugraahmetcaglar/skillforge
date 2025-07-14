@@ -60,10 +60,10 @@ def user_credentials() -> dict:
     """Fixture to provide valid user credentials.
 
     Returns:
-        dict: Username and password for authentication
+        dict: username and password for authentication
     """
     return {
-        "username": "user@example.com",
+        "email": "user@example.com",
         "password": "Password123!",
     }
 
@@ -105,9 +105,10 @@ def user_factory(db):
             User: A User instance with the given attributes
         """
         # Default values
+        email = f"{baker.random_gen.gen_string(8)}@example.com"
         default_values = {
-            "username": baker.random_gen.gen_string(10),
-            "email": f"{baker.random_gen.gen_string(10)}@example.com",
+            "username": email,
+            "email": email,
             "first_name": baker.random_gen.gen_string(8),
             "last_name": baker.random_gen.gen_string(8),
             "is_active": True,

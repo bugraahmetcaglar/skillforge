@@ -54,8 +54,8 @@ def login_user(api_client: APIClient, user, user_credentials) -> dict:
     Returns:
         dict: API response with auth tokens
     """
-    url = reverse("token_obtain_pair")
-    response = api_client.post(url, user_credentials, format="json")
+    url = reverse("v1_user_login")
+    response = api_client.post(path=url, data=user_credentials, format="json")
     assert response.status_code == status.HTTP_200_OK
     return response.json()
 
@@ -72,6 +72,6 @@ def auth_client(api_client: APIClient, login_user: dict) -> APIClient:
         APIClient: Authenticated API client using token
     """
     access_token = login_user.get("access_token", login_user.get("access"))
-    client = APIClient()
+    client = api_client
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
     return client
