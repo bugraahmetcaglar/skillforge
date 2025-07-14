@@ -91,13 +91,9 @@ ipython_config.py
 #   install all needed dependencies.
 #Pipfile.lock
 
-# celery beat schedule file
-celerybeat-schedule
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
+# Environment files variants
+.env.local
+local.env
 .env
 dev.env
 .venv
@@ -129,3 +125,9 @@ dmypy.json
 
 # Ignored Folder
 /ignored-files
+
+# Ignore Dockerfile development variants
+Dockerfile.dev
+
+# Ignore development docker-compose files
+docker-compose.dev.yml
