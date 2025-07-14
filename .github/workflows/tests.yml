@@ -19,6 +19,7 @@ jobs:
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: test_skillforge
+          POSTGRES_USER: postgres
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -58,11 +59,23 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements/test.txt
     
+    - name: Wait for PostgreSQL
+      run: |
+        until pg_isready -h localhost -p 5432 -U postgres; do
+          echo "Waiting for PostgreSQL..."
+          sleep 2
+        done
+    
     - name: Run tests
       env:
-        SECRET_KEY: ${{ secrets.SKILLFORGE_SECRET_KEY }}
+        SECRET_KEY: test-secret-key-for-ci-only
         DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_skillforge
         REDIS_URL: redis://localhost:6379/0
+        POSTGRES_HOST: localhost
+        POSTGRES_PORT: 5432
+        POSTGRES_DB: test_skillforge
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
       run: |
         python manage.py migrate --noinput
         python manage.py collectstatic --noinput
