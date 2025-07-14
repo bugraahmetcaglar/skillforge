@@ -1,8 +1,10 @@
-# Test settings for the SkillForge project.
+"""
+Test settings for the SkillForge project.
+"""
 import os
 from skillforge.settings.base import *  # noqa
 
-# Override SECRET_KEY for tests if not provided
+# Override SECRET_KEY for tests
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-test-key-for-testing-only')
 
 # Set test database to in-memory SQLite for faster tests
@@ -13,10 +15,45 @@ DATABASES = {
     }
 }
 
-# Disable Django-Q for tests to avoid Redis dependency
+# Remove django-q from installed apps for tests
 INSTALLED_APPS = [app for app in INSTALLED_APPS if app != 'django_q']
 
-# Remove Django-Q configuration
+# Disable Q_CLUSTER for tests
 Q_CLUSTER = {}
 
-# Rest of the existing test settings...
+# Speed up password hashing in tests
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.MD5PasswordHasher",
+]
+
+# Use in-memory cache
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "",
+    }
+}
+
+# Turn off non-essential middleware
+MIDDLEWARE = [m for m in MIDDLEWARE if "debug" not in m.lower()]
+
+# Disable logging during tests to reduce noise
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": True,
+    "handlers": {
+        "null": {
+            "class": "logging.NullHandler",
+        },
+    },
+    "loggers": {
+        "": {
+            "handlers": ["null"],
+            "propagate": False,
+        },
+    },
+}
+
+# Celery settings for tests
+CELERY_TASK_ALWAYS_EAGER = True
+CELERY_TASK_EAGER_PROPAGATES = True
