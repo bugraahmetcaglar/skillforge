@@ -10,7 +10,9 @@ This project demonstrates a professional-grade implementation of a User Manageme
 - Role-based permissions
 - API documentation using Swagger/ReDoc
 - Containerized development environment with Docker
-- Background task processing with Celery and Redis
+- Background task processing with Django Q
+- Unit and integration tests
+- 
 - Data persistence with PostgreSQL
 
 ## Architecture Highlights
