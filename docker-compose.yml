@@ -3,6 +3,7 @@ volumes:
 
 services:
   web:
+    container_name: web-1
     build: 
       context: .
       dockerfile: Dockerfile
@@ -23,6 +24,7 @@ services:
 
   db:
     restart: always
+    container_name: db-1
     image: postgres:16.2-bullseye
     env_file:
       - ./dev.env
@@ -35,6 +37,7 @@ services:
       POSTGRES_USER: "skillforge"
       POSTGRES_PASSWORD: "skillforge"
   redis:
+    container_name: redis-1
     image: redis:alpine
     env_file:
       - ./dev.env
@@ -44,6 +47,7 @@ services:
     restart: unless-stopped
 
   qcluster:
+    container_name: qcluster-1
     build:
       context: .
       dockerfile: Dockerfile

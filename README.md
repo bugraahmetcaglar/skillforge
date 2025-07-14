@@ -10,7 +10,8 @@ This project demonstrates a professional-grade implementation of a User Manageme
 - Role-based permissions
 - API documentation using Swagger/ReDoc
 - Containerized development environment with Docker
-- Background task processing with Celery and Redis
+- Background task processing with Django Q
+- Unit and integration tests
 - Data persistence with PostgreSQL
 
 ## Architecture Highlights
@@ -24,70 +25,9 @@ This project intentionally demonstrates two different implementation approaches 
 
 Both approaches are valid in professional Django development, and this project shows when each might be preferred.
 
-### Project Structure
-
-```
-skillforge/
-├── apps/
-│   └── user/
-│       ├── migrations/
-│       ├── admin.py
-│       ├── apps.py
-│       ├── models.py         # User model definition
-│       ├── permissions.py    # Custom permission classes
-│       ├── serializers.py    # Serializers for the User model
-│       ├── tests.py
-│       ├── urls.py           # URL routing for user operations
-│       ├── views.py          # Class-based views implementation
-│       └── viewsets.py       # ViewSet implementation
-├── core/
-│   ├── fields.py             # Custom model fields
-│   └── models.py             # Base abstract models
-├── skillforge/
-│   ├── asgi.py
-│   ├── settings.py           # Project settings
-│   ├── urls.py               # Main URL routing
-│   └── wsgi.py
-├── requirements/
-│   ├── base.txt              # Base dependencies
-│   ├── dev.txt               # Development dependencies
-│   ├── local.txt             # Local development dependencies
-│   └── test.txt              # Testing dependencies
-├── docker-compose.yml        # Docker services configuration
-├── Dockerfile                # Docker container definition
-└── manage.py                 # Django management script
-```
-
 ## API Endpoints
 
 The API is organized under the `/api/v1/user/` base path.
-
-### Using Class-Based Views:
-
-- `POST /api/v1/user/register/` - Register a new user
-- `GET /api/v1/user/list/` - List all users (admin only)
-- `GET /api/v1/user/<uuid:pk>/` - Get user details
-- `GET /api/v1/user/me/` - Get current user details
-- `PUT/PATCH /api/v1/user/<uuid:pk>/update/` - Update user
-- `PUT/PATCH /api/v1/user/me/update/` - Update current user
-
-### Using ViewSets:
-
-- `GET /api/v1/user/users/` - List all users (admin only)
-- `POST /api/v1/user/users/` - Create a new user
-- `GET /api/v1/user/users/<uuid:pk>/` - Get user details
-- `PUT/PATCH /api/v1/user/users/<uuid:pk>/` - Update user
-- `DELETE /api/v1/user/users/<uuid:pk>/` - Delete user
-- `POST /api/v1/user/users/register/` - Register a new user (returns token)
-- `GET/PUT/PATCH /api/v1/user/users/me/` - Get/update current user details
-- `POST /api/v1/user/users/regenerate_token/` - Regenerate auth token
-
-### Token Operations:
-
-- `POST /api/v1/user/token/` - Obtain token pair
-- `POST /api/v1/user/token/refresh/` - Refresh access token
-- `POST /api/v1/user/token/verify/` - Verify token
-- `POST /api/v1/user/token/regenerate/` - Regenerate token pair
 
 ## Setup and Installation
 
@@ -114,6 +54,15 @@ The API is organized under the `/api/v1/user/` base path.
    DB_HOST=db
    DB_PORT=5432
    ```
+
+### Git Hooks Setup
+
+```bash
+mkdir -p .git/hooks
+chmod +x scripts/git-hooks/pre-commit
+ln -sf ../../scripts/git-hooks/pre-commit .git/hooks/pre-commit
+```
+
 
 3. Start the Docker services:
    ```

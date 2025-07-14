@@ -1,0 +1,8 @@
+# Import base requirements
+-r base.txt
+
+# Production-specific packages
+gunicorn==21.2.0
+psycopg[binary]==3.2.9
+whitenoise==6.8.2
+sentry-sdk==2.19.0

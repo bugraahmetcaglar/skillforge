@@ -3,8 +3,13 @@ from __future__ import annotations
 import pytest
 from model_bakery import baker
 from rest_framework.test import APIClient
+import ulid
 
 from apps.user.models import User
+from core.fields import ULIDField
+
+
+baker.generators.add(ULIDField, lambda: str(ulid.ULID()))  # type: ignore
 
 
 @pytest.fixture
@@ -47,8 +52,24 @@ def authenticated_admin_client(admin_user: User) -> APIClient:
     return client
 
 
+# ----------------------------------------------------
+# Fixtures for User Authentication and API Testing
+# ----------------------------------------------------
 @pytest.fixture
-def user() -> User:
+def user_credentials() -> dict:
+    """Fixture to provide valid user credentials.
+
+    Returns:
+        dict: username and password for authentication
+    """
+    return {
+        "email": "user@example.com",
+        "password": "Password123!",
+    }
+
+
+@pytest.fixture
+def user(db) -> User:
     """Fixture to provide a regular user for testing.
 
     Returns:
@@ -56,7 +77,7 @@ def user() -> User:
     """
     user = baker.make(
         User,
-        username="regular_user",
+        username="user@example.com",
         email="user@example.com",
         first_name="Regular",
         last_name="User",
@@ -67,7 +88,7 @@ def user() -> User:
 
 
 @pytest.fixture
-def user_factory():
+def user_factory(db):
     """Factory fixture to create multiple users with different attributes.
 
     Returns:
@@ -84,9 +105,10 @@ def user_factory():
             User: A User instance with the given attributes
         """
         # Default values
+        email = f"{baker.random_gen.gen_string(8)}@example.com"
         default_values = {
-            "username": baker.random_gen.gen_string(10),
-            "email": f"{baker.random_gen.gen_string(10)}@example.com",
+            "username": email,
+            "email": email,
             "first_name": baker.random_gen.gen_string(8),
             "last_name": baker.random_gen.gen_string(8),
             "is_active": True,

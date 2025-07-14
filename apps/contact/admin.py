@@ -158,7 +158,7 @@ class ContactAdmin(admin.ModelAdmin):
 class ContactBackupAdmin(admin.ModelAdmin):
     list_display = ["created_at", "is_active"]
     list_filter = ["is_active", "created_at"]
-    search_fields = ["user__username", "user__email"]
+    search_fields = ["user__email"]
     readonly_fields = ["contact", "contact_data", "created_at", "last_updated"]
 
     def has_add_permission(self, request):
