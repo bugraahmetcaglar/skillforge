@@ -62,6 +62,7 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     "django_redis",
     "django_q",
+    "django_extensions",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS + THIRD_PARTY_APPS

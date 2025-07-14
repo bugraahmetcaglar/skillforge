@@ -18,7 +18,7 @@ class Money:
         if isinstance(amount, str):
             try:
                 amount = Decimal(amount)
-            except ValueError:
+            except (ValueError, TypeError):
                 raise ValueError("Invalid string format for amount")
         if not isinstance(currency, str):
             raise TypeError("Currency must be a string")
@@ -48,7 +48,7 @@ class Money:
     def currency_code(self) -> str:
         """Get currency code as string"""
 
-        return str(self.money.currency)
+        return str(self.money.currency.code)
 
     def __str__(self) -> str:
         """String representation of Money object"""
