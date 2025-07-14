@@ -3,8 +3,13 @@ from __future__ import annotations
 import pytest
 from model_bakery import baker
 from rest_framework.test import APIClient
+import ulid
 
 from apps.user.models import User
+from core.fields import ULIDField
+
+
+baker.generators.add(ULIDField, lambda: str(ulid.ULID()))  # type: ignore
 
 
 @pytest.fixture
@@ -47,8 +52,46 @@ def authenticated_admin_client(admin_user: User) -> APIClient:
     return client
 
 
+# ----------------------------------------------------
+# Fixtures for User Authentication and API Testing
+# ----------------------------------------------------
 @pytest.fixture
-def user() -> User:
+def user_credentials() -> dict:
+    """Fixture to provide valid user credentials.
+
+    Returns:
+        dict: Username and password for authentication
+    """
+    return {
+        "username": "testuser",
+        "password": "StrongP@ssw0rd",
+    }
+
+
+@pytest.fixture
+def user_with_credentials(db, user_credentials: dict) -> User:
+    """Fixture to provide a user with known credentials.
+
+    Args:
+        user_credentials: Dictionary containing username and password
+
+    Returns:
+        User: User with the provided credentials
+    """
+    user = baker.make(
+        "user.User",
+        username=user_credentials["username"],
+        email="test@example.com",
+        first_name="Test",
+        last_name="User",
+    )
+    user.set_password(user_credentials["password"])
+    user.save()
+    return user
+
+
+@pytest.fixture
+def user(db) -> User:
     """Fixture to provide a regular user for testing.
 
     Returns:
@@ -67,7 +110,7 @@ def user() -> User:
 
 
 @pytest.fixture
-def user_factory():
+def user_factory(db):
     """Factory fixture to create multiple users with different attributes.
 
     Returns:

@@ -5,7 +5,8 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from apps.user.models import User
+
+pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture

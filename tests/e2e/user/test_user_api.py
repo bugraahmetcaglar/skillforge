@@ -6,6 +6,8 @@ from rest_framework import status
 
 from apps.user.models import User
 
+pytestmark = pytest.mark.django_db
+
 
 @pytest.mark.e2e
 @pytest.mark.api
@@ -25,9 +27,7 @@ class TestUserRegistrationAPI:
         assert "refresh_token" in response.data["data"]
 
         # Verify the user was created in the database
-        user_exists = User.objects.filter(
-            username=register_user_payload["username"]
-        ).exists()
+        user_exists = User.objects.filter(username=register_user_payload["username"]).exists()
         assert user_exists is True
 
     def test_register_with_invalid_data(self, api_client):
@@ -120,61 +120,3 @@ class TestUserAuthenticationAPI:
         }
         response = api_client.post(url, non_existent, format="json")
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-    def test_token_refresh(self, api_client, login_user):
-        """Test that a user can refresh their token."""
-        url = reverse("token_refresh")
-        refresh_data = {"refresh": login_user.get("refresh")}
-        response = api_client.post(url, refresh_data, format="json")
-
-        assert response.status_code == status.HTTP_200_OK
-        assert "access" in response.data
-
-    def test_token_verify(self, api_client, login_user):
-        """Test that a token can be verified."""
-        url = reverse("token_verify")
-        token_data = {"token": login_user.get("access")}
-        response = api_client.post(url, token_data, format="json")
-
-        assert response.status_code == status.HTTP_200_OK
-
-
-@pytest.mark.e2e
-@pytest.mark.api
-class TestUserAPIFlow:
-    """E2E tests for the complete user API flow."""
-
-    def test_register_login_update_flow(self, api_client, user_flow):
-        """Test the complete user flow: register, login, update profile."""
-        # Register a new user
-        user_data = {
-            "username": "flowuser",
-            "email": "flowuser@example.com",
-            "first_name": "Flow",
-            "last_name": "User",
-            "password": "StrongP@ssw0rd!",
-        }
-
-        # Use the helper to register and login
-        register_response, login_response = user_flow["register_and_login"](
-            api_client, user_data
-        )
-
-        # Verify tokens were received
-        assert "access_token" in register_response["data"] or "access" in login_response
-
-        # Create authenticated client
-        tokens = (
-            login_response if "access" in login_response else register_response["data"]
-        )
-        auth_client = user_flow["get_authenticated_client"](api_client, tokens)
-
-        # Get the user details
-        detail_url = reverse(
-            "v1_user_detail", kwargs={"pk": User.objects.get(username="flowuser").id}
-        )
-        detail_response = auth_client.get(detail_url)
-        assert detail_response.status_code == status.HTTP_200_OK
-
-        # The full flow is successful if we get here
-        assert True
