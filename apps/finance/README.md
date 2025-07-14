@@ -235,7 +235,7 @@ start()
 
 ### Technical Improvements
 1. **Caching**: Redis caching for frequently accessed data
-2. **Background Tasks**: Q2 tasks for subscription processing
+2. **Background Tasks**: django-q tasks for subscription processing
 3. **API Versioning**: Versioned API endpoints
 4. **Rate Limiting**: API rate limiting implementation
 5. **Monitoring**: Subscription status monitoring
