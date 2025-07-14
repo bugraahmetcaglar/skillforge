@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     build-essential \
     default-libmysqlclient-dev
 
-ARG BUILD_ENVIRONMENT=local
+ARG BUILD_ENVIRONMENT=cloud
 
 COPY ./requirements /requirements
 RUN pip wheel --wheel-dir /usr/src/app/wheels  \
