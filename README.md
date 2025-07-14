@@ -115,6 +115,15 @@ The API is organized under the `/api/v1/user/` base path.
    DB_PORT=5432
    ```
 
+### Git Hooks Setup
+
+```bash
+mkdir -p .git/hooks
+chmod +x scripts/git-hooks/pre-commit
+ln -sf ../../scripts/git-hooks/pre-commit .git/hooks/pre-commit
+```
+
+
 3. Start the Docker services:
    ```
    docker-compose up -d
