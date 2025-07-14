@@ -6,26 +6,21 @@ import os
 from skillforge.settings.base import *  # noqa
 
 # Override SECRET_KEY for tests
-SECRET_KEY = os.environ.get("SKILLFORGE_SECRET_KEY", "test-secret-key")
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
-DEBUG = False
+DEBUG = os.environ.get("DEBUG")
 
-# Use PostgreSQL in CI, SQLite locally
-if os.environ.get("CI"):
-    # GitHub Actions environment
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.environ.get("POSTGRES_DB", "test_skillforge"),
-            "USER": os.environ.get("POSTGRES_USER", "postgres"),
-            "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "postgres"),
-            "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
-            "PORT": os.environ.get("POSTGRES_PORT", "5432"),
-        }
+# Use PostgreSQL
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("DB_NAME", "test_skillforge"),
+        "USER": os.environ.get("DB_USER", "postgres"),
+        "PASSWORD": os.environ.get("DB_PASSWORD", "postgres"),
+        "HOST": os.environ.get("DB_HOST", "localhost"),
+        "PORT": os.environ.get("DB_PORT", "5432"),
     }
-else:
-    # Local development - use SQLite for speed
-    DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}}
+}
 
 # Remove django-q from installed apps for tests
 INSTALLED_APPS = [app for app in INSTALLED_APPS if app not in ["django_q", "django_extensions"]]
