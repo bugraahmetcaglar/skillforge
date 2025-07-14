@@ -2,16 +2,11 @@ from __future__ import annotations
 
 import hashlib
 import logging
+
 from datetime import datetime, timedelta
 from django.core.cache import cache
 from django.db.models import QuerySet
-from django.db.models import Q
-from django.db.models import Count, Prefetch
-from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from typing import Dict, List, Optional, Any
-from django.core.cache import cache
-from django.db.models import Q, Count, Prefetch
-from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 
 from apps.log.models import LogEntry
 
