@@ -15,7 +15,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:15
+        image: postgres:16.2-bullseye
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: test_skillforge
@@ -59,23 +59,17 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements/test.txt
     
-    - name: Wait for PostgreSQL
-      run: |
-        until pg_isready -h localhost -p 5432 -U postgres; do
-          echo "Waiting for PostgreSQL..."
-          sleep 2
-        done
-    
     - name: Run tests
       env:
-        SECRET_KEY: test-secret-key-for-ci-only
-        DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_skillforge
-        REDIS_URL: redis://localhost:6379/0
-        POSTGRES_HOST: localhost
-        POSTGRES_PORT: 5432
-        POSTGRES_DB: test_skillforge
-        POSTGRES_USER: postgres
-        POSTGRES_PASSWORD: postgres
+        SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        DB_NAME: test_skillforge
+        DB_USER: postgres
+        DB_PASSWORD: postgres
+        DB_HOST: localhost
+        DB_PORT: 5432
+        REDIS_HOST: localhost
+        REDIS_PORT: 6379
+        DEBUG: False
       run: |
         python manage.py migrate --noinput
         python manage.py collectstatic --noinput
