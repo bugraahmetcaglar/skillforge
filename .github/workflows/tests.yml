@@ -59,6 +59,7 @@ jobs:
     
     - name: Run tests
       env:
+        SECRET_KEY: ${{ secrets.SKILLFORGE_SECRET_KEY }}
         DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_skillforge
         REDIS_URL: redis://localhost:6379/0
       run: |
