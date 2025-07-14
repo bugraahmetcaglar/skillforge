@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 class ExchangeRateAPI:
     BASE_URL = "https://v6.exchangerate-api.com/v6/"
     EXCHANGE_RATE_API_KEY = settings.EXCHANGE_RATE_API_KEY
+    DEFAULT_TIMEOUT = 30  # seconds
 
     def __init__(self):
         if not self.EXCHANGE_RATE_API_KEY:
@@ -34,7 +35,7 @@ class ExchangeRateAPI:
         else:
             url += f"/pair/{base_currency}/{target_currency}"
 
-        response = requests.get(url)
+        response = requests.get(url, timeout=self.DEFAULT_TIMEOUT)
 
         if not response.ok:
             logger.error(

@@ -123,7 +123,7 @@ def monthly_subscription_expense_report():
     message += "\n"
     TelegramReminderAPI().send_message(message)
 
-    return "successful"
+    return True
 
 
 def next_month_subscription_expense_report():
@@ -166,4 +166,4 @@ def next_month_subscription_expense_report():
 
     TelegramReminderAPI().send_message(message)
 
-    return "succesfull"
+    return True
