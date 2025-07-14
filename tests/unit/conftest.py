@@ -41,7 +41,6 @@ def mock_user_data() -> dict:
         dict: A dictionary containing valid user data
     """
     return {
-        "username": "user@example.com",
         "email": "user@example.com",
         "first_name": "Test",
         "last_name": "User",
