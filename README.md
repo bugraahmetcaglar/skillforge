@@ -12,7 +12,6 @@ This project demonstrates a professional-grade implementation of a User Manageme
 - Containerized development environment with Docker
 - Background task processing with Django Q
 - Unit and integration tests
-- 
 - Data persistence with PostgreSQL
 
 ## Architecture Highlights
