@@ -35,88 +35,89 @@ core/
 
 ### Custom Fields
 
-#### ULIDField
+### ULIDField (`core/fields.py`)
 ```python
 class ULIDField(models.CharField):
-    """ULID primary key field for better performance"""
-    def __init__(self, *args, **kwargs):
-        kwargs["max_length"] = 26
-        kwargs["unique"] = True
-        super().__init__(*args, **kwargs)
+    ...
 ```
+ULID primary key field for better performance and uniqueness than traditional auto-increment IDs.
 
-#### NullableCharField
+### NullableCharField (`core/fields.py`)
 ```python
 class NullableCharField(models.CharField):
-    """CharField that allows NULL instead of empty strings"""
-    def __init__(self, *args, **kwargs):
-        kwargs.update({"null": True, "blank": True, "default": None})
-        super().__init__(*args, **kwargs)
+    ...
 ```
+CharField that allows NULL instead of empty strings, with automatic null=True, blank=True, default=None setup.
 
 ### Base Models
 
-#### BaseModel
+### BaseModel (`core/models.py`)
 ```python
 class BaseModel(models.Model):
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(default=timezone.now, db_index=True)
-    last_updated = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        abstract = True
+    ...
 ```
+Abstract base model providing common fields (is_active, created_at, last_updated) for all models across the platform.
 
 ### Money System
 
-#### Money Class
+### Money (`core/money.py`)
 ```python
 class Money:
-    """Multi-currency money handling with automatic precision"""
-    
-    def __init__(self, amount, currency="TRY"):
-        # Automatic rounding based on currency
-        precision = self.CURRENCY_PRECISION.get(currency, 2)
-        quantizer = Decimal("0.1") ** precision
-        rounded_amount = Decimal(str(amount)).quantize(quantizer)
-        self.money = MoneyedMoney(rounded_amount, Currency(currency))
-    
-    # Arithmetic operations
-    def __add__(self, other): # Money + Money
-    def __mul__(self, multiplier): # Money * number
-    def __truediv__(self, divisor): # Money / number
-    
-    # Comparisons
-    def __eq__(self, other): # Money == Money
-    def __lt__(self, other): # Money < Money
+    ...
 ```
+Multi-currency money handling class with automatic precision based on currency type and support for arithmetic operations.
 
-**Features:**
-- Automatic precision handling (JPY=0, BHD=3, others=2)
-- Arithmetic operations with type safety
-- Currency conversion support
-- Serialization to/from dict
+#### __add__() (`core/money.py`)
+```python
+def __add__(self, other):
+    ...
+```
+Add two money objects of the same currency.
+
+#### __mul__() (`core/money.py`)
+```python
+def __mul__(self, multiplier):
+    ...
+```
+Multiply money by a number (int, float, or Decimal).
+
+#### __truediv__() (`core/money.py`)
+```python
+def __truediv__(self, divisor):
+    ...
+```
+Divide money by a number with zero division protection.
+
+#### to_dict() (`core/money.py`)
+```python
+def to_dict(self):
+    ...
+```
+Convert Money object to dictionary representation for serialization.
+
+#### from_dict() (`core/money.py`)
+```python
+@classmethod
+def from_dict(cls, data):
+    ...
+```
+Create Money object from dictionary data.
 
 ### Authentication Backend
 
-#### EmailOrUsernameModelBackend
+### EmailOrUsernameModelBackend (`core/backends.py`)
 ```python
 class EmailOrUsernameModelBackend(ModelBackend):
-    """Login with email or username in single query"""
-    
-    def authenticate(self, request, username=None, password=None, **kwargs):
-        try:
-            user = User.objects.get(
-                Q(username=username) | Q(email=username),
-                is_active=True
-            )
-            if user.check_password(password):
-                return user
-        except User.DoesNotExist:
-            # Timing attack protection
-            User().set_password(password)
-        return None
+    ...
 ```
+Authentication backend allowing login with email or username in single database query with timing attack protection.
+
+#### authenticate() (`core/backends.py`)
+```python
+def authenticate(self, request, username=None, password=None, **kwargs):
+    ...
+```
+Authenticates user with email or username, includes timing attack protection by simulating password verification for non-existent users.
 
 ### Permissions
 
@@ -147,79 +148,86 @@ class IsOwnerOrAdmin(permissions.BasePermission):
 
 ### Base Views
 
-#### BaseAPIView
+### BaseAPIView (`core/views.py`)
 ```python
 class BaseAPIView(GenericAPIView):
-    """Foundation for standardized API responses"""
-    
-    def success_response(self, data=None, status_code=200, message=None):
-        response_data = {"success": True}
-        if message:
-            response_data["message"] = message
-        if data is not None:
-            response_data["data"] = data
-        return Response(response_data, status=status_code)
-    
-    def error_response(self, error_message="", status_code=400):
-        return Response({
-            "success": False,
-            "detail": error_message
-        }, status=status_code)
+    ...
 ```
+Foundation class for standardized API responses with success/error helpers and integrated logging.
 
-#### Specialized Views
-- **BaseListAPIView**: Paginated list views
-- **BaseCreateAPIView**: Object creation
-- **BaseRetrieveAPIView**: Object retrieval
-- **BaseUpdateAPIView**: Object updates
+#### success_response() (`core/views.py`)
+```python
+def success_response(self, data=None, status_code=200, message=None):
+    ...
+```
+Returns standardized success response with optional data and message.
+
+#### error_response() (`core/views.py`)
+```python
+def error_response(self, error_message="", status_code=400):
+    ...
+```
+Returns standardized error response with error message and status code.
+
+### BaseListAPIView (`core/views.py`)
+```python
+class BaseListAPIView(mixins.ListModelMixin, BaseAPIView):
+    ...
+```
+Base view for paginated list operations with standardized response format.
+
+### BaseCreateAPIView (`core/views.py`)
+```python
+class BaseCreateAPIView(mixins.CreateModelMixin, BaseAPIView):
+    ...
+```
+Base view for object creation with success response formatting.
+
+### BaseRetrieveAPIView (`core/views.py`)
+```python
+class BaseRetrieveAPIView(mixins.RetrieveModelMixin, BaseAPIView):
+    ...
+```
+Base view for single object retrieval with standardized response.
+
+### BaseUpdateAPIView (`core/views.py`)
+```python
+class BaseUpdateAPIView(mixins.UpdateModelMixin, BaseAPIView):
+    ...
+```
+Base view for object updates supporting both PUT and PATCH operations.
 
 ### Pagination
 
-#### CustomPageNumberPagination
+### CustomPageNumberPagination (`core/pagination.py`)
 ```python
 class CustomPageNumberPagination(PageNumberPagination):
-    """Standardized pagination with metadata"""
-    
-    page_size = 25
-    page_size_query_param = "page_size"
-    
-    def get_paginated_response(self, data):
-        return Response({
-            "success": True,
-            "data": {
-                "count": self.page.paginator.count,
-                "next": self.get_next_link(),
-                "previous": self.get_previous_link(),
-                "results": data,
-            },
-        })
+    ...
 ```
+Standardized pagination class with metadata and success flag formatting.
+
+#### get_paginated_response() (`core/pagination.py`)
+```python
+def get_paginated_response(self, data):
+    ...
+```
+Returns paginated response with success flag, count, next/previous links, and results.
 
 ### Utilities
 
-#### recursive_getattr
+### recursive_getattr() (`core/utils.py`)
 ```python
 def recursive_getattr(obj, attr_path, default=None):
-    """Get nested attributes using dot notation"""
-    # user.profile.name -> getattr(getattr(user, 'profile'), 'name')
-    try:
-        attrs = attr_path.split(".")
-        current_obj = obj
-        for attr in attrs:
-            current_obj = getattr(current_obj, attr, None)
-            if current_obj is None:
-                return default
-        return current_obj
-    except (AttributeError, TypeError):
-        return default
+    ...
 ```
+Get nested attributes using dot notation (e.g., "user.profile.name") with default value fallback.
 
-#### multi_pop
+### multi_pop() (`core/utils.py`)
 ```python
 def multi_pop(dictionary, *keys, default=None):
-    """Pop multiple keys from dictionary in one call"""
-    return [dictionary.pop(key, default) for key in keys]
+    ...
 ```
+Pop multiple keys from dictionary in one call, returns list of popped values.
 
 ### Enums
 
@@ -256,21 +264,19 @@ class PaymentMethodChoices(models.TextChoices):
 
 ### Services
 
-#### ExchangeRateAPI
+### ExchangeRateAPI (`core/services/exchange_rate_api.py`)
 ```python
 class ExchangeRateAPI:
-    """Exchange rate conversion service"""
-    
-    def get_exchange_rate(self, base_currency, target_currency, target_date=None):
-        """Get conversion rate between currencies"""
-        url = f"{self.base_url}/pair/{base_currency}/{target_currency}"
-        response = requests.get(url, timeout=30)
-        
-        if response.ok:
-            rate = response.json().get("conversion_rate", 0)
-            return Decimal(rate).quantize(Decimal("0.01"))
-        return Decimal("0")
+    ...
 ```
+Exchange rate conversion service using external API for real-time currency conversion.
+
+#### get_exchange_rate() (`core/services/exchange_rate_api.py`)
+```python
+def get_exchange_rate(self, base_currency, target_currency, target_date=None):
+    ...
+```
+Get conversion rate between currencies with optional historical date support, returns quantized Decimal.
 
 ## 🔧 Usage Examples
 
@@ -327,19 +333,12 @@ class ContactViewSet(viewsets.ModelViewSet):
 
 ## 🚨 Error Handling
 
-### Custom Exception Handler
+### custom_exception_handler() (`core/views.py`)
 ```python
 def custom_exception_handler(exc, context):
-    """Security-aware exception handling"""
-    response = drf_exception_handler(exc, context)
-    
-    if not settings.DEBUG:
-        # Mask errors in production
-        if response is not None:
-            response.data = {"detail": "Invalid request."}
-    
-    return response
+    ...
 ```
+Security-aware exception handling that masks detailed errors in production while preserving debug information in development.
 
 ## 🏗️ Design Patterns
 
