@@ -4,7 +4,6 @@ import logging
 from rest_framework.permissions import AllowAny
 from rest_framework import status
 
-from apps.ai.nlp.message_processor import TelegramMessageProcessor
 from apps.thirdparty.telegram.serializers import TelegramWebhookSerializer
 from core.views import BaseAPIView
 
@@ -20,7 +19,6 @@ class TelegramReminderWebhookAPIView(BaseAPIView):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.message_processor = TelegramMessageProcessor()
 
     def post(self, request, *args, **kwargs):
         """Handle incoming webhook messages from the Telegram Reminder Bot."""
@@ -37,32 +35,6 @@ class TelegramReminderWebhookAPIView(BaseAPIView):
             # chat_id = message["chat"]["id"]
             username = message["from"].get("username", "Unknown")
 
-            logger.info(f"AI processing message from @{username}: {text}")
+            logger.info(f"Received message from user ID {user_id}: {text}")
 
-            # Process with NLP
-            processed_message = self.message_processor.process_message(message_text=text, user_id=user_id)
-
-            # Handle intent and send response
-            # from apps.ai.services.telegram_response import IntentTelegramResponseHandler
-
-            # intent_handler = IntentTelegramResponseHandler()
-            # intent_handler.handle_intent(intent=processed_message.intent)
-            response_data = {
-                "processed": {
-                    "intent": processed_message.intent,
-                    "confidence": processed_message.confidence,
-                    "entities": processed_message.entities,
-                    "original_text": processed_message.original_text,
-                }
-            }
-
-            logger.info(
-                f"Processed message: intent={processed_message.intent}, "
-                f"confidence={processed_message.confidence}, entities={processed_message.entities}"
-            )
-
-            return self.success_response(
-                data=response_data,
-                message=f"AI processed message with intent: {processed_message.intent}",
-                status_code=status.HTTP_200_OK,
-            )
+            return self.success_response(status_code=status.HTTP_200_OK)

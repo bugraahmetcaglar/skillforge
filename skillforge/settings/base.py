@@ -50,7 +50,6 @@ LOCAL_APPS = [
     "apps.log",
     "apps.reminder",
     "apps.finance",
-    "apps.ai",
     "apps.thirdparty",
 ]
 
