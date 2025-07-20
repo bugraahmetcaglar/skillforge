@@ -31,7 +31,7 @@ structlog==24.1.0  # Structured logging
 python-ulid==3.0.0
 
 # Testing Framework
-# pytest==8.4.0  # https://docs.pytest.org/en/stable/
+pytest==8.4.1  # https://docs.pytest.org/en/stable/
 pytest-django==4.11.1  # https://github.com/pytest-dev/pytest-django
 pytest-sugar==1.0.0  # https://github.com/Frozenball/pytest-sugar
 
@@ -43,6 +43,9 @@ django-coverage-plugin==3.1.0  # https://github.com/nedbat/django_coverage_plugi
 
 # Mock
 requests-mock==1.12.1  # https://github.com/jamielennox/requests-mock
+
+# Time Mocking
+freezegun=1.5.3
 
 # vObject
 # ------------------------------------------------------------------------------

@@ -112,19 +112,31 @@ class VCardParser:
     def _extract_data(self, vcard: Any) -> dict:
         data = {}
 
-        self.extract_full_name(vcard=vcard)
+        if hasattr(vcard, "fn"):
+            data["full_name"] = self._decode_value(vcard.fn)
+
         data = self.extract_name(vcard=vcard, data=data)
         data = self.extract_phone_numbers(vcard=vcard, data=data)
         data = self._extract_email(vcard=vcard, data=data)
 
-        # Other fields
-        for field, attr in [("organization", "org"), ("job_title", "title"), ("notes", "note")]:
-            if hasattr(vcard, attr):
-                value = self._decode_value(getattr(vcard, attr))
-                if value:
-                    data[field] = value
+        if hasattr(vcard, "org"):
+            data["organization"] = self._decode_value(vcard.org)
 
-        data["birthday"] = recursive_getattr(vcard, "bday.value")
+        if hasattr(vcard, "title"):
+            data["job_title"] = self._decode_value(vcard.title)
+
+        if hasattr(vcard, "note"):
+            data["notes"] = self._decode_value(vcard.note)
+
+        if hasattr(vcard, "bday"):
+            try:
+                bday_value = vcard.bday.value
+                if bday_value:
+                    data["birthday"] = bday_value
+            except Exception as err:
+                logger.warning(f"Failed to extract birthday: {err}")
+
+        return data
 
         return data
 
@@ -184,12 +196,27 @@ class VCardParser:
     def _decode_value(self, field: Any) -> str:
         try:
             value = field.value
+            if isinstance(value, list) and value:
+                value = value[0]
+
             if hasattr(field, "encoding_param") and "QUOTED-PRINTABLE" in (field.encoding_param or []):
-                value = quopri.decodestring(value.encode()).decode("utf-8")
-            return value.strip() if value else ""
+                if isinstance(value, str):
+                    value = quopri.decodestring(value.encode()).decode("utf-8")
+
+            if value is not None:
+                return str(value).strip()
+            return ""
+
         except Exception as err:
             logger.exception(f"Failed to decode field value: {err}, 'field': {field}")
-            return str(getattr(field, "value", ""))
+
+            try:
+                raw_value = getattr(field, "value", "")
+                if isinstance(raw_value, list) and raw_value:
+                    return str(raw_value[0]).strip()
+                return str(raw_value).strip() if raw_value else ""
+            except:
+                return ""
 
     def _get_type(self, field: Any) -> str:
         try:

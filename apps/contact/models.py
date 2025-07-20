@@ -100,7 +100,7 @@ class Contact(BaseModel):
 
     deactivated_at = models.DateTimeField(blank=True, null=True)
 
-    contact_manager = ContactManager()
+    objects = ContactManager()
 
     class Meta:
         unique_together = [["user", "external_id", "import_source"]]
