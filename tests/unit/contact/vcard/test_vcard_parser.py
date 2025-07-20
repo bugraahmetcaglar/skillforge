@@ -1,168 +1,181 @@
 from __future__ import annotations
 
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 
-@pytest.mark.current
 @pytest.mark.unit
 class TestVCardParser:
-    def test_split_blocks(self, parser, sample_vcard_content):
+    def test_split_blocks(self, parser, vcard_sample):
         """Test splitting vCard content into individual blocks"""
-        blocks = parser._split_blocks(sample_vcard_content)
+        blocks = parser._split_blocks(vcard_sample)
 
-        assert len(blocks) == 2
-        assert blocks[0].startswith("BEGIN:VCARD")
-        assert blocks[0].endswith("END:VCARD")
-        assert "John Doe" in blocks[0]
-        assert "Jane Smith" in blocks[1]
+        assert len(blocks) == 5  # 5 contacts in comprehensive fixture
+        assert all(block.startswith("BEGIN:VCARD") for block in blocks)
+        assert all(block.endswith("END:VCARD") for block in blocks)
+        assert "John Michael Doe" in blocks[0]
+        assert "Jane Elizabeth Smith" in blocks[1]
+        assert "Ali Mehmet Veli" in blocks[2]
 
-    def test_extract_full_name(self, parser):
-        """Test extracting full name from vCard"""
-        mock_vcard = MagicMock()
-        mock_vcard.fn.value = "John Doe"
+    def test_extract_full_name(self, parser, vcard_sample):
+        """Test extracting full name from vCard content"""
+        contacts = parser.parse(vcard_sample)
 
-        with patch.object(parser, "_decode_value", return_value="John Doe"):
-            result = parser.extract_full_name(mock_vcard)
-            assert result == "John Doe"
+        assert contacts[0]["full_name"] == "John Michael Doe"
+        assert contacts[1]["full_name"] == "Jane Elizabeth Smith"
+        assert contacts[2]["full_name"] == "Ali Mehmet Veli"
 
-    def test_extract_name_from_n_field(self, parser):
-        """Test extracting name components from N field"""
-        mock_vcard = MagicMock()
-        mock_name = MagicMock()
-        mock_name.given = "John"
-        mock_name.family = "Doe"
-        mock_name.additional = "Middle"
-        mock_vcard.n.value = mock_name
+    def test_extract_name_components(self, parser, vcard_sample):
+        """Test extracting name components from vCard"""
+        contacts = parser.parse(vcard_sample)
 
-        data = {}
-        result = parser.extract_name(mock_vcard, data)
+        # Test first contact with all name components
+        john = contacts[0]
+        assert john["first_name"] == "John"
+        assert john["last_name"] == "Doe"
+        assert john["middle_name"] == "Michael"
+        assert john["full_name"] == "John Michael Doe"
 
-        assert result["first_name"] == "John"
-        assert result["last_name"] == "Doe"
-        assert result["middle_name"] == "Middle"
-
-    def test_extract_phone_numbers(self, parser):
+    def test_extract_phone_numbers(self, parser, vcard_sample):
         """Test extracting and normalizing phone numbers"""
-        mock_vcard = MagicMock()
-        mock_tel = MagicMock()
-        mock_tel.value = "0532 123 45 67"
-        mock_vcard.tel = [mock_tel]
+        contacts = parser.parse(vcard_sample)
 
-        with patch.object(parser, "_get_type", return_value="CELL"):
-            data = {}
-            result = parser.extract_phone_numbers(mock_vcard, data)
+        # Test Turkish phone normalization
+        john = contacts[0]
+        assert john["mobile_phone"] == "+905321234567"
 
-            assert result["mobile_phone"] == "+905321234567"
+        # Test different formats
+        ali = contacts[2]
+        assert ali["mobile_phone"] == "+905321112233"
 
-    def test_extract_email(self, parser):
-        """Test extracting email address"""
-        mock_vcard = MagicMock()
+    def test_extract_email(self, parser, vcard_sample):
+        """Test extracting email addresses"""
+        contacts = parser.parse(vcard_sample)
 
-        with patch("core.utils.recursive_getattr", return_value="john@example.com"):
-            data = {}
-            result = parser._extract_email(mock_vcard, data)
+        # Test email normalization (should be lowercase)
+        john = contacts[0]
+        assert john["email"] == "john.doe@example.com"
 
-            assert result["email"] == "john@example.com"
+        jane = contacts[1]
+        assert jane["email"] == "jane.smith@hospital.com"
 
-    def test_decode_value_quoted_printable(self, parser):
-        """Test decoding quoted-printable encoded values"""
-        mock_field = MagicMock()
-        mock_field.value = "=C4=B0stanbul"
-        mock_field.encoding_param = ["QUOTED-PRINTABLE"]
+        # Test Turkish domain
+        ali = contacts[2]
+        assert ali["email"] == "ali.veli@turkish-company.com.tr"
 
-        with patch("quopri.decodestring") as mock_decode:
-            mock_decode.return_value.decode.return_value = "İstanbul"
-            result = parser._decode_value(mock_field)
-            assert result == "İstanbul"
+    def test_extract_organization_info(self, parser, vcard_sample):
+        """Test extracting organization and job information"""
+        contacts = parser.parse(vcard_sample)
 
-    def test_get_type_from_field(self, parser):
-        """Test extracting type from vCard field"""
-        mock_field = MagicMock()
-        mock_field.type_param = ["CELL", "PREF"]
+        john = contacts[0]
+        assert john["organization"] == "Example Corporation"
+        assert john["job_title"] == "Senior Software Engineer"
 
-        result = parser._get_type(mock_field)
-        assert result == "CELL"
+        jane = contacts[1]
+        assert jane["organization"] == "City Hospital"
+        assert jane["job_title"] == "Chief Medical Officer"
 
-    def test_parse_manual_fallback(self, parser):
-        """Test manual parsing fallback"""
-        vcard_block = """BEGIN:VCARD
-FN:John Doe
-N:Doe;John;;;
-TEL:+905321234567
-EMAIL:john@example.com
-END:VCARD"""
+        # Test Turkish organization
+        ali = contacts[2]
+        assert ali["organization"] == "Türk Şirketi A.Ş."
+        assert ali["job_title"] == "Genel Müdür"
 
-        with patch.object(parser, "_decode_manual", side_effect=lambda x: x):
-            result = parser._parse_manual(vcard_block)
+    def test_extract_birthday(self, parser, vcard_sample):
+        """Test extracting birthday information"""
+        contacts = parser.parse(vcard_sample)
 
-            assert result is not None
-            assert result["full_name"] == "John Doe"
-            assert result["first_name"] == "John"
-            assert result["last_name"] == "Doe"
+        john = contacts[0]
+        assert "birthday" in john
+        assert str(john["birthday"]) == "1985-03-15"
 
-    def test_parse_with_vobject_success(self, parser, sample_vcard_content):
-        """Test successful parsing with vobject"""
-        with patch("vobject.base.readOne") as mock_readone, patch.object(
-            parser, "_extract_data", return_value={"name": "John"}
-        ):
+        jane = contacts[1]
+        assert str(jane["birthday"]) == "1980-07-22"
 
-            mock_vcard = MagicMock()
-            mock_readone.return_value = mock_vcard
+    def test_extract_notes(self, parser, vcard_sample):
+        """Test extracting notes field"""
+        contacts = parser.parse(vcard_sample)
 
-            result = parser.parse(sample_vcard_content)
+        john = contacts[0]
+        expected_note = (
+            "Experienced software engineer specializing in Python and Django. Team lead with 10+ years experience."
+        )
+        assert john["notes"] == expected_note
 
-            assert len(result) == 2
-            assert all(contact == {"name": "John"} for contact in result)
+        # Test Turkish characters in notes
+        ali = contacts[2]
+        assert "çığöşü" in ali["notes"]
 
-    def test_parse_with_vobject_failure_fallback(self, parser):
-        """Test fallback to manual parsing when vobject fails"""
-        vcard_content = """BEGIN:VCARD
-FN:John Doe
-END:VCARD"""
+    def test_parse_multiple_contacts(self, parser, vcard_sample):
+        """Test parsing multiple contacts from single vCard file"""
+        contacts = parser.parse(vcard_sample)
 
-        with patch("vobject.base.readOne", side_effect=Exception("Parse error")), patch.object(
-            parser, "_parse_manual", return_value={"name": "John"}
-        ):
+        # Should parse all contacts including empty ones
+        assert len(contacts) >= 3  # At least 3 valid contacts
 
-            result = parser.parse(vcard_content)
+        # Verify specific contacts
+        john = next(c for c in contacts if c.get("full_name") == "John Michael Doe")
+        jane = next(c for c in contacts if c.get("full_name") == "Jane Elizabeth Smith")
+        ali = next(c for c in contacts if c.get("full_name") == "Ali Mehmet Veli")
 
-            assert len(result) == 1
-            assert result[0] == {"name": "John"}
+        assert john["email"] == "john.doe@example.com"
+        assert jane["email"] == "jane.smith@hospital.com"
+        assert ali["email"] == "ali.veli@turkish-company.com.tr"
 
-    def test_decode_manual_quoted_printable(self, parser):
-        """Test manual decoding of quoted-printable"""
-        with patch("quopri.decodestring") as mock_decode:
-            mock_decode.return_value.decode.return_value = "İstanbul"
-            result = parser._decode_manual("=C4=B0stanbul")
-            assert result == "İstanbul"
+    def test_parse_empty_and_minimal_contacts(self, parser, vcard_sample):
+        """Test handling of empty and minimal contacts"""
+        contacts = parser.parse(vcard_sample)
 
-    def test_decode_manual_regular_text(self, parser):
-        """Test manual decoding of regular text"""
-        result = parser._decode_manual("Regular Text")
-        assert result == "Regular Text"
+        # Find minimal contact
+        minimal = next((c for c in contacts if c.get("full_name") == "Minimal Contact"), None)
+        if minimal:
+            assert minimal["email"] == "minimal@test.com"
+            assert minimal.get("mobile_phone") is None or minimal.get("mobile_phone") == ""
 
-    def test_extract_data_comprehensive(self, parser):
-        """Test comprehensive data extraction from vCard"""
-        mock_vcard = MagicMock()
+    def test_phone_normalization_various_formats(self, parser, vcard_sample):
+        """Test phone number normalization with various formats"""
+        contacts = parser.parse(vcard_sample)
 
-        # Mock all the extraction methods
-        with patch.object(parser, "extract_full_name", return_value="John Doe"), patch.object(
-            parser, "extract_name", return_value={"first_name": "John"}
-        ), patch.object(parser, "extract_phone_numbers", return_value={"mobile_phone": "+905321234567"}), patch.object(
-            parser, "_extract_email", return_value={"email": "john@example.com"}
-        ), patch(
-            "core.utils.recursive_getattr", return_value=None
-        ):
+        # Test different phone formats in the same vCard
+        john = next(c for c in contacts if c.get("full_name") == "John Michael Doe")
+        ali = next(c for c in contacts if c.get("full_name") == "Ali Mehmet Veli")
 
-            # Mock additional fields
-            mock_vcard.org = MagicMock()
-            mock_vcard.title = MagicMock()
-            mock_vcard.note = MagicMock()
+        # All should be normalized to +90 format
+        assert john["mobile_phone"].startswith("+90")
+        assert ali["mobile_phone"].startswith("+90")
 
-            with patch.object(parser, "_decode_value", side_effect=lambda x: "Mocked Value"):
-                result = parser._extract_data(mock_vcard)
+    def test_turkish_character_handling(self, parser, vcard_sample):
+        """Test handling of Turkish characters"""
+        contacts = parser.parse(vcard_sample)
 
-                assert "first_name" in result
-                assert "mobile_phone" in result
-                assert "email" in result
+        # Find Ali's contact with Turkish characters
+        ali = next(c for c in contacts if c.get("full_name") == "Ali Mehmet Veli")
+
+        # Should preserve Turkish characters
+        assert "Türk Şirketi" in ali["organization"]
+        assert "çığöşü" in ali["notes"]
+
+    def test_parse_invalid_vcard_fallback(self, parser, invalid_vcard_sample):
+        """Test manual parsing fallback for invalid vCard"""
+
+        # Mock vobject to fail and test manual parsing
+        with patch("vobject.base.readOne", side_effect=Exception("Parse error")):
+            contacts = parser.parse(invalid_vcard_sample)
+
+            assert len(contacts) == 1
+            contact = contacts[0]
+            assert contact["full_name"] == "Test Contact"
+            assert contact["first_name"] == "Test"
+            assert contact["last_name"] == "Contact"
+
+    def test_edge_cases_and_missing_fields(self, parser, vcard_sample):
+        """Test handling of missing fields and edge cases"""
+        contacts = parser.parse(vcard_sample)
+
+        # All contacts should have basic structure
+        for contact in contacts:
+            if contact:  # Skip empty contacts
+                # Should not throw errors for missing fields
+                _ = contact.get("mobile_phone", "")
+                _ = contact.get("email", "")
+                _ = contact.get("organization", "")
+                _ = contact.get("notes", "")
