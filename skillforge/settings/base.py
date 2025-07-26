@@ -295,3 +295,14 @@ TELEGRAM_REMINDER_CHAT_ID = os.environ.get("TELEGRAM_REMINDER_CHAT_ID")
 
 # Exchange Rate API Configuration
 EXCHANGE_RATE_API_KEY = os.environ.get("EXCHANGE_RATE_API_KEY")
+
+
+# AI Configuration
+OLLAMA_CONFIG = {
+    'BASE_URL': os.environ.get('OLLAMA_BASE_URL', 'http://ollama-1:11434'),
+    'DEFAULT_MODEL': os.environ.get('OLLAMA_MODEL', 'qwen2.5:7b'),
+    'FALLBACK_MODEL': os.environ.get('OLLAMA_FALLBACK_MODEL', 'phi3.5:latest'),
+    'TIMEOUT': int(os.environ.get('OLLAMA_TIMEOUT', 30)),
+    'MAX_TOKENS': int(os.environ.get('OLLAMA_MAX_TOKENS', 1000)),
+    'TEMPERATURE': float(os.environ.get('OLLAMA_TEMPERATURE', 0.7)),
+}

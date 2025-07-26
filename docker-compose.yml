@@ -1,5 +1,6 @@
 volumes:
   postgres_data: {}
+  ollama_data: {}
 
 services:
   web:
@@ -60,3 +61,37 @@ services:
     env_file:
       - ./dev.env
     restart: on-failure
+
+  ollama:
+    container_name: ollama-1
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_ORIGINS=http://localhost:8000,http://127.0.0.1:8000
+    restart: unless-stopped
+
+  ollama-setup:
+    container_name: ollama-setup-1
+    image: ollama/ollama:latest
+    depends_on:
+      - ollama
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=http://ollama-1:11434
+    entrypoint: /bin/bash
+    command: >
+      -c "
+        echo 'Waiting for Ollama to start...' &&
+        sleep 20 &&
+        ollama pull qwen2.5:7b &&
+        ollama pull phi3.5:latest &&
+        echo 'Modern models downloaded successfully!' &&
+        ollama list
+      "
+    profiles:
+      - setup

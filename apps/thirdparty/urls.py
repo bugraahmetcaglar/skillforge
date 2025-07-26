@@ -1,8 +1,9 @@
-from django.urls import path
-
-from apps.thirdparty.telegram.webhooks import TelegramReminderWebhookAPIView
+from django.urls import include, path
 
 
 urlpatterns = [
-    path("telegram/webhook/", TelegramReminderWebhookAPIView.as_view(), name="telegram_webhook"),
+    # Telegram webhook
+    path("telegram/", include("apps.thirdparty.telegram.urls")),
+    # Ollama API endpoints
+    path("ollama/", include("apps.thirdparty.ollama.urls")),
 ]
