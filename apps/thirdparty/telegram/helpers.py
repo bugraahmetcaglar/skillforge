@@ -5,89 +5,89 @@ import json
 
 
 def get_telegram_welcome_message(user: User) -> str:
-    """Telegram karşılama mesajı"""
+    """Telegram welcome message"""
     return f"""
-🤖 **Merhaba {user.get_full_name() or user.username}!**
+🤖 **Hello {user.get_full_name() or user.username}!**
 
-Ben senin kişisel finans asistanınım! 
+I'm your personal finance assistant! 
 
-💰 **Soru Örnekleri:**
-• "Bu ay ne kadar ödeyeceğim?"
-• "Netflix aboneliğim var mı?"
-• "En pahalı aboneliğim hangisi?"
-• "Hangi kategoride en çok harcıyorum?"
+💰 **Example Questions:**
+• "How much will I pay this month?"
+• "Do I have a Netflix subscription?"
+• "What's my most expensive subscription?"
+• "Which category do I spend the most on?"
 
-⚡ **Komutlar:**
-/help - Yardım menüsü
-/status - AI durumu
+⚡ **Commands:**
+/help - Help menu
+/status - AI status
 
-Hemen soru sormaya başlayabilirsin! 🚀
+You can start asking questions right away! 🚀
     """
 
 
 def get_telegram_help_message() -> str:
-    """Telegram yardım mesajı"""
+    """Telegram help message"""
     return """
-🆘 **Yardım Menüsü**
+🆘 **Help Menu**
 
-**💬 Nasıl Soru Sorarım?**
-Doğal Türkçe ile yazabilirsin:
-• "Spotify aboneliğim aktif mi?"
-• "Bu ay toplam ne kadar ödeyeceğim?"
-• "En ucuz aboneliğim hangisi?"
+**💬 How to Ask Questions?**
+You can write in natural Turkish:
+• "Is my Spotify subscription active?"
+• "How much will I pay in total this month?"
+• "What's my cheapest subscription?"
 
-**📊 Soru Türleri:**
-• Abonelik bilgileri
-• Maliyet hesaplamaları  
-• Kategori analizleri
-• Ödeme takibi
+**📊 Question Types:**
+• Subscription information
+• Cost calculations  
+• Category analysis
+• Payment tracking
 
-**🤖 AI Durumu:**
-/status komutuyla AI servisinin çalışıp çalışmadığını öğrenebilirsin.
+**🤖 AI Status:**
+Use /status command to check if AI service is running.
 
-Başka sorun var mı? 😊
+Any other questions? 😊
     """
 
 
 def get_ai_unavailable_message() -> str:
-    """AI servisi kapalı mesajı"""
+    """AI service unavailable message"""
     return """
-🔧 **AI Servisi Aktif Değil**
+🔧 **AI Service Not Active**
 
-Üzgünüm, şu anda AI asistanı kullanılamıyor.
+Sorry, AI assistant is currently unavailable.
 
-**📱 Alternatifler:**
-• Web arayüzünden aboneliklerini görüntüleyebilirsin
-• Manuel hesaplamalar yapabilirsin
-• Daha sonra tekrar deneyebilirsin
+**📱 Alternatives:**
+• You can view your subscriptions via web interface
+• You can do manual calculations
+• You can try again later
 
-**🛠️ Durum:**
-AI servisi şu anda bakımda olabilir.
+**🛠️ Status:**
+AI service might be under maintenance.
 
-/status komutuyla durumu kontrol edebilirsin.
+Check status with /status command.
     """
 
 
 def get_no_subscription_message(user: User) -> str:
-    """Abonelik yok mesajı"""
+    """No subscription message"""
     return f"""
-📭 **Henüz Aboneliğin Yok**
+📭 **You Don't Have Any Subscriptions Yet**
 
-Merhaba {user.get_full_name() or user.username}!
+Hello {user.get_full_name() or user.username}!
 
-Henüz hiç abonelik eklememişsin. 
+You haven't added any subscriptions yet. 
 
-**🚀 Başlangıç:**
-• Web arayüzünden aboneliklerini ekle
-• Otomatik hatırlatmalar kur
-• AI asistanıyla analiz yap
+**🚀 Getting Started:**
+• Add your subscriptions via web interface
+• Set up automatic reminders
+• Analyze with AI assistant
 
-Abonelik ekledikten sonra benimle konuşabilirsin! 💪
+You can talk to me after adding subscriptions! 💪
     """
 
 
 def get_user_financial_context(user: User) -> Optional[Dict[str, Any]]:
-    """"""
+    """Get user's financial context"""
     subscriptions = UserSubscription.objects.filter(user=user, status="active").select_related(
         "subscription_service", "subscription_service__category"
     )
@@ -100,7 +100,6 @@ def get_user_financial_context(user: User) -> Optional[Dict[str, Any]]:
     categories = {}
 
     for sub in subscriptions:
-        # TRY'ye dönüştürme
         amount_try = float(sub.amount)
         if sub.currency == "USD":
             amount_try *= 30
@@ -109,8 +108,7 @@ def get_user_financial_context(user: User) -> Optional[Dict[str, Any]]:
 
         total_monthly_try += amount_try
 
-        # Kategori analizi
-        category_name = sub.subscription_service.category.name if sub.subscription_service.category else "Diğer"
+        category_name = sub.subscription_service.category.name if sub.subscription_service.category else "Other"
         if category_name not in categories:
             categories[category_name] = {"count": 0, "total": 0}
         categories[category_name]["count"] += 1
@@ -139,39 +137,39 @@ def get_user_financial_context(user: User) -> Optional[Dict[str, Any]]:
 
 
 def create_system_prompt(user_context: Dict[str, Any]) -> str:
-    """AI için sistem prompt'u oluştur"""
-    return f"""Sen SkillForge platformunun Telegram finans asistanısın. 
+    """Create system prompt for AI"""
+    return f"""You are SkillForge platform's Telegram finance assistant. 
 
-Kullanıcı: {user_context['user_name']}
-Toplam Abonelik: {user_context['total_count']} adet
-Aylık Tahmini: {user_context['estimated_monthly_try']} TRY
-Yıllık Tahmini: {user_context['estimated_yearly_try']} TRY
+User: {user_context['user_name']}
+Total Subscriptions: {user_context['total_count']} items
+Monthly Estimate: {user_context['estimated_monthly_try']} TRY
+Yearly Estimate: {user_context['estimated_yearly_try']} TRY
 
-Aktif Abonelikler:
+Active Subscriptions:
 {json.dumps(user_context['subscriptions'], ensure_ascii=False, indent=2)}
 
-Kategori Analizi:
+Category Analysis:
 {json.dumps(user_context['categories'], ensure_ascii=False, indent=2)}
 
-Telegram Mesaj Kuralları:
-1. Türkçe yanıt ver, samimi ol
-2. Emoji kullan ama abartma
-3. Kısa ve net açıklamalar (max 3 paragraf)
-4. Para birimlerini belirt
-5. Tarihleri dd/mm/yyyy formatında yaz
-6. Finansal tavsiyelerde bulunabilirsin
+Telegram Message Rules:
+1. Respond in Turkish, be friendly and helpful
+2. Use emojis but don't overdo it
+3. Keep explanations short and clear (max 3 paragraphs)
+4. Specify currency units
+5. Write dates in dd/mm/yyyy format
+6. You can provide financial advice
 
-Kullanıcının sorusunu kişisel verileriyle yanıtla."""
+Answer the user's question using their personal data."""
 
 
 def format_telegram_error(error_type: str) -> str:
-    """Telegram için hata mesajlarını formatla"""
+    """Format error messages for Telegram"""
     error_messages = {
-        "no_data": "📭 Henüz aboneliğin yok. Web arayüzünden ekleyebilirsin.",
-        "ai_unavailable": "🤖 AI servisi şu anda aktif değil. /status ile kontrol et.",
-        "timeout": "⏱️ AI zaman aşımına uğradı. Tekrar dene.",
-        "invalid_query": "❓ Soruyu anlayamadım. Daha açık bir şekilde sor.",
-        "permission_denied": "🔒 Bu işlem için yetkin yok.",
-        "user_not_found": "👤 Kullanıcı bulunamadı. Önce hesap bağla.",
+        "no_data": "📭 You don't have any subscriptions yet. You can add them via web interface.",
+        "ai_unavailable": "🤖 AI service is not active right now. Check with /status.",
+        "timeout": "⏱️ AI timed out. Please try again.",
+        "invalid_query": "❓ I couldn't understand the question. Please ask more clearly.",
+        "permission_denied": "🔒 You don't have permission for this operation.",
+        "user_not_found": "👤 User not found. Please link your account first.",
     }
-    return error_messages.get(error_type, "❌ Beklenmeyen hata oluştu.")
+    return error_messages.get(error_type, "❌ An unexpected error occurred.")
