@@ -44,6 +44,17 @@ django-coverage-plugin==3.1.0  # https://github.com/nedbat/django_coverage_plugi
 # Mock
 requests-mock==1.12.1  # https://github.com/jamielennox/requests-mock
 
+# Testing Framework - Latest versions
+pytest-mock==3.14.0
+pytest-cov==5.0.0
+pytest-xdist==3.6.0  # For parallel test execution
+
+# Test utilities
+responses==0.25.3  # For HTTP mocking
+
+# Coverage
+coverage[toml]==7.6.4
+
 # Time Mocking
 freezegun==1.5.3
 
