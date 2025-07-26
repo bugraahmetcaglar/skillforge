@@ -1,4 +1,5 @@
 import logging
+from typing import cast
 
 from django.db import models
 from django_filters.rest_framework import DjangoFilterBackend
@@ -24,15 +25,19 @@ logger = logging.getLogger(__name__)
 
 
 class VCardImportAPIView(BaseAPIView):
+    """API for importing contacts from VCard files"""
+
     serializer_class = VCardImportSerializer
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser]
 
-    def post(self, request: Request) -> Response:
+    def post(self, request: Request, *args, **kwargs) -> Response:
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        service = VCardImportService(user=request.user)
+        # Cast request.user to User type for type safety
+        user: User = cast(User, request.user)
+        service = VCardImportService(user=user)
         try:
             result = service.import_from_file(serializer.validated_data["vcard_file"])
             return self.success_response(
@@ -48,37 +53,12 @@ class VCardImportAPIView(BaseAPIView):
 
 
 class ContactListAPIView(BaseListAPIView):
-    """Contact List API with filtering and search
-
-    Features:
-    - Pagination
-    - Advanced filtering (name, email, phone, organization, dates, etc.)
-    - Full-text search across multiple fields
-    - Ordering by various fields
-    - Owner-based access control
-
-    Query Parameters:
-    - search: Global search across name, email, phone, organization
-    - first_name, last_name: Filter by name (case-insensitive)
-    - email: Filter by email (case-insensitive)
-    - phone: Search in any phone field
-    - organization, job_title, department: Organization filters
-    - import_source: Filter by import source (google, outlook, vcard, etc.)
-    - created_after, created_before: Date range filters
-    - has_birthday, has_photo, has_notes: Boolean filters
-    - tags: Filter by tag content
-    - ordering: Sort by fields (created_at, first_name, last_name, etc.)
-
-    Example URLs:
-    - /api/v1/contact/list?search=john
-    - /api/v1/contact/list?organization=google&has_birthday=true
-    - /api/v1/contact/list?created_after=2024-01-01&ordering=-created_at
-    """
+    """Contact List API with filtering and search"""
 
     serializer_class = ContactSerializer
     permission_classes = [IsOwner]
     filterset_class = ContactFilter
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter] # type: ignore
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]  # type: ignore
     search_fields = ["first_name", "last_name", "email", "mobile_phone", "organization"]
     ordering_fields = ["created_at", "first_name", "last_name", "organization", "imported_at"]
 
@@ -88,23 +68,7 @@ class ContactListAPIView(BaseListAPIView):
 
 
 class ContactDetailAPIView(BaseRetrieveAPIView):
-    """Contact Detail API - Get single contact with full information
-
-    Features:
-    - Detailed contact information with formatted data
-    - Calculated fields (age, display name, formatted phones)
-    - Social media links formatting
-    - Owner-based access control
-    - Rich phone number presentation
-
-    Returns:
-    - All contact fields except sensitive data (user, external_id)
-    - display_name: Formatted full name or fallback
-    - contact_age: Calculated age from birthday
-
-    URL: /api/v1/contact/<uuid:pk>/
-    Method: GET
-    """
+    """Contact Detail API - Get single contact with full information"""
 
     serializer_class = ContactSerializer
     permission_classes = [IsOwner]
@@ -137,14 +101,37 @@ class ContactDuplicateListAPIView(BaseListAPIView):
     serializer_class = ContactDuplicateSerializer
     permission_classes = [IsOwner]
     filterset_class = ContactDuplicateFilter
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter] # type: ignore
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]  # type: ignore
+
+    def get(self, request: Request, *args, **kwargs) -> Response:
+        _queryset = self.get_queryset()
+        serializer = self.get_serializer(_queryset, many=True)
+
+        if not serializer.data:
+            return self.success_response(data=[], message="No duplicate contacts found")
+
+        data = serializer.data
+        if self.filterset_class:
+            filterset = self.filterset_class(self.request.GET, queryset=_queryset)
+            data = self.get_serializer(filterset.qs, many=True).data
+        else:
+            data = self.get_serializer(_queryset, many=True).data
+
+        return self.success_response(
+            data=data,
+            message=f"Found {len(data)} duplicate contacts",
+            status_code=status.HTTP_200_OK,
+        )
 
     def get_queryset(self) -> models.QuerySet:
         """Get duplicate contacts using Contact manager's duplicate_numbers method"""
         logger.info(f"Fetching duplicate contacts for user {self.request.user.pk}")
 
-        user_id = self.request.user.pk
-        if not user_id:
+        user: User | None = cast(User, self.request.user)
+
+        breakpoint()
+        if not user or not user.is_authenticated:
             return Contact.objects.none()
-        return Contact.contact_manager.duplicate_numbers(user_id=user_id)
-    
+
+        _query_set = Contact.objects.duplicate_numbers(user_id=user.id)
+        return _query_set

@@ -16,7 +16,10 @@ logger = logging.getLogger(__name__)
 class VCardImportService:
     """Service for importing vCard files"""
 
-    def __init__(self, user: User):
+    def __init__(self, user: User | None):
+        if not user:
+            raise ValueError("User must be provided for vCard import")
+
         self.user = user
 
     def import_from_file(self, vcard_file: Any) -> dict[str, Any]:
@@ -145,6 +148,3 @@ class VCardImportService:
                 "total_processed": len(contacts_data),
                 "errors": [str(err)],
             }
-
-
-# VCardParser artık gereksiz - silindi!

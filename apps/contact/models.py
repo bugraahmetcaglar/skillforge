@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from django.forms.models import model_to_dict
 from django.db import models
+from django.db.models import Q, Count, Window, QuerySet, Manager, F
 from django.db.models.functions import RowNumber
 from django.utils import timezone as django_timezone
 
@@ -11,19 +12,17 @@ from core.models import BaseModel
 from apps.user.models import User
 
 
-class ContactManager(models.Manager):
-    def duplicate_numbers(self, user_id: int) -> models.QuerySet[Contact, Contact]:
+class ContactManager(Manager):
+    def duplicate_numbers(self, user_id: int) -> QuerySet:
         """Find duplicate phone numbers with details"""
 
         return (
             self.filter(user_id=user_id, is_active=True, mobile_phone__isnull=False)
             .exclude(mobile_phone="")
             .annotate(
-                # Count duplicates for each mobile phone number
-                phone_count=models.Window(expression=models.Count("mobile_phone"), partition_by=["mobile_phone"]), # type: ignore
-                # Rank by creation date (1 = primary/oldest)
-                contact_rank=models.Window(
-                    expression=RowNumber(), partition_by=["mobile_phone"], order_by=["created_at"] # type: ignore
+                phone_count=Count("mobile_phone"),
+                contact_rank=Window(
+                    expression=RowNumber(), partition_by=[F("mobile_phone")], order_by=[F("created_at")]
                 ),
             )
             .filter(phone_count__gt=1)
@@ -100,7 +99,7 @@ class Contact(BaseModel):
 
     deactivated_at = models.DateTimeField(blank=True, null=True)
 
-    objects = ContactManager()
+    objects: ContactManager = ContactManager()
 
     class Meta:
         unique_together = [["user", "external_id", "import_source"]]
@@ -163,7 +162,10 @@ class ContactBackup(BaseModel):
     class Meta:
         ordering = ["-created_at"]
 
-    def get_field(self, field_name: str,):
+    def get_field(
+        self,
+        field_name: str,
+    ):
         """Get specific field from contact data"""
         return self.contact_data.get(field_name)
 

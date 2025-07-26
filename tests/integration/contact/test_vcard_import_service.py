@@ -38,6 +38,7 @@ class TestVCardImportServiceIntegration:
 
         # Check John's contact (most complete)
         john = contacts.filter(first_name="John", last_name="Doe").first()
+        assert john is not None
         assert john.first_name == "John"
         assert john.middle_name == "Michael"
         assert john.last_name == "Doe"
@@ -72,6 +73,7 @@ class TestVCardImportServiceIntegration:
 
         # Check Jane's contact
         jane = contacts.filter(first_name="Jane", last_name="Smith").first()
+        assert jane is not None
         assert jane.first_name == "Jane"
         assert jane.middle_name == "Elizabeth"
         assert jane.last_name == "Smith"
@@ -113,6 +115,7 @@ class TestVCardImportServiceIntegration:
 
         # Check Ali's contact
         ali = contacts.filter(first_name="Ali", last_name="Veli").first()
+        assert ali is not None
         assert ali.first_name == "Ali"
         assert ali.middle_name == "Mehmet"
         assert ali.last_name == "Veli"
@@ -260,6 +263,10 @@ class TestVCardImportServiceIntegration:
         jane = Contact.objects.filter(user=user, first_name="Jane", last_name="Smith").first()
         ali = Contact.objects.filter(user=user, first_name="Ali", last_name="Veli").first()
 
+        assert john is not None
+        assert jane is not None
+        assert ali is not None
+
         assert john.birthday is not None
         assert str(john.birthday) == "1985-03-15"
 
@@ -282,6 +289,9 @@ class TestVCardImportServiceIntegration:
         john = Contact.objects.filter(user=user, first_name="John").first()
         ali = Contact.objects.filter(user=user, first_name="Ali").first()
 
+        assert john is not None
+        assert ali is not None
+
         # Check notes content
         assert "Python and Django" in john.notes
         assert "Team lead" in john.notes
@@ -302,6 +312,8 @@ class TestVCardImportServiceIntegration:
         # Assert
         john = Contact.objects.filter(user=user, first_name="John").first()
 
+        assert john is not None
+
         # Should have primary email and phone
         assert john.email == "john.doe@example.com"  # Work email should be primary
         assert john.mobile_phone == "+905321234567"
@@ -319,6 +331,8 @@ class TestVCardImportServiceIntegration:
         assert result["imported_count"] >= 3
 
         ali = Contact.objects.filter(user=user, first_name="Ali").first()
+
+        assert ali is not None
         assert "Türk" in ali.organization
         assert "Müdür" in ali.job_title
 
@@ -335,11 +349,12 @@ class TestVCardImportServiceIntegration:
         # Assert - Should handle encoding error gracefully
         assert result == {} or result.get("imported_count", 0) == 0
 
+    @pytest.mark.current
     def test_import_service_with_invalid_user(self, vcard_sample: str, vcard_file_factory):
         """Test service behavior with invalid user"""
         # Arrange
         vcard_file = vcard_file_factory(vcard_sample)
-        service = VCardImportService(user=None)
+        service = VCardImportService(user=None)  # No user provided
 
         # Act
         result = service.import_from_file(vcard_file)
@@ -370,6 +385,8 @@ END:VCARD"""
         assert result["imported_count"] == 1
 
         contact = Contact.objects.filter(user=user, is_active=True).first()
+
+        assert contact is not None
         assert contact.full_name == "Test Contact"
         assert contact.first_name == "Test"
         assert contact.last_name == "Contact"
