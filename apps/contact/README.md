@@ -20,7 +20,6 @@ Contact management system with vCard import, duplicate detection, and advanced f
 
 ### Services
 - **VCardImportService**: Handles vCard file processing
-- **VCardParser**: Parses vCard content and extracts data
 
 ## 📋 API Endpoints
 
@@ -157,13 +156,6 @@ def import_from_file(self, vcard_file):
     ...
 ```
 Processes uploaded vCard file, parses content, and saves contacts to database with error handling.
-
-### VCardParser (`apps/contact/services.py`)
-```python
-class VCardParser:
-    ...
-```
-Parses vCard file content and extracts contact data into dictionary format.
 
 #### parse() (`apps/contact/services.py`)
 ```python

@@ -96,6 +96,7 @@ class Contact(BaseModel):
 
     # Photo
     photo_url = models.URLField(blank=True, default="")
+    photo_base64 = models.TextField(blank=True, default="")
 
     deactivated_at = models.DateTimeField(blank=True, null=True)
 

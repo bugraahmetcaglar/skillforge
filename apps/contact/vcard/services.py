@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import logging
 from typing import Any, Optional
 from vobject import base as vobject
@@ -35,27 +36,27 @@ class VCardImportService:
     def _read_file_content(self, vcard_file: Any) -> str:
         """Read and decode vCard file content"""
         content = None
-        
+
         try:
             # Ensure file is seeked to the start
             vcard_file.seek(0)
-            
+
             # Read raw content
             raw_content = vcard_file.read()
-            
+
             # Decode content
             try:
                 content = raw_content.decode("utf-8")
             except UnicodeDecodeError:
                 logger.warning("Failed to decode as UTF-8, trying latin-1")
                 content = raw_content.decode("latin-1")
-                
+
             return content
-            
+
         except Exception as e:
             logger.error(f"Failed to read vCard file: {e}")
             raise ValueError(f"Could not read vCard file: {e}")
-        
+
         finally:
             try:
                 vcard_file.close()
@@ -69,7 +70,6 @@ class VCardImportService:
         try:
             # Parse all vCards from content
             vcards = list(vobject.readComponents(content))
-
             for i, vcard in enumerate(vcards):
                 try:
                     adapter = VCardAdapter(vcard)
@@ -79,7 +79,6 @@ class VCardImportService:
                 except Exception as err:
                     logger.warning(f"Failed to process vCard {i}: {err}")
                     continue
-
         except Exception as err:
             logger.error(f"Failed to parse vCard content: {err}")
 
@@ -87,8 +86,8 @@ class VCardImportService:
 
     def _adapter_to_contact_data(self, adapter: VCardAdapter, index: int) -> Optional[dict[str, Any]]:
         """Convert VCardAdapter data to Contact model format"""
-        # Skip if no meaningful data
-        if not adapter.full_name and not adapter.primary_email and not adapter.mobile_phone:
+
+        if not adapter.full_name and not adapter.primary_email and not adapter.primary_phone:
             return None
 
         data = {
@@ -96,21 +95,21 @@ class VCardImportService:
             "middle_name": adapter.middle_name or "",
             "last_name": adapter.last_name or "",
             "full_name": adapter.full_name or "",
-            "nickname": adapter.nickname or "",
             "email": adapter.primary_email or "",
-            "mobile_phone": adapter.mobile_phone or "",
+            "mobile_phone": adapter.primary_phone or "",
+            "addresses": adapter.addresses or [],
             "organization": adapter.organization or "",
             "job_title": adapter.job_title or "",
+            "department": adapter.department or "",
+            "birthday": adapter.birthday or None,
+            "websites": adapter.websites or [],
             "notes": adapter.notes or "",
-            "birthday": adapter.birthday,
-            "anniversary": adapter.anniversary,
+            "photo_base64": adapter.photo_url or "",
             "user": self.user,
             "import_source": SourceEnum.VCARD.value,
         }
-
         # Generate unique external ID
         data["external_id"] = generate_unique_external_id(data=data, index=index, user=self.user)
-
         return data
 
     def _save_contacts(self, contacts_data: list[dict]) -> dict[str, Any]:

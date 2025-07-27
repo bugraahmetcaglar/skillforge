@@ -129,7 +129,6 @@ class ContactDuplicateListAPIView(BaseListAPIView):
 
         user: User | None = cast(User, self.request.user)
 
-        breakpoint()
         if not user or not user.is_authenticated:
             return Contact.objects.none()
 

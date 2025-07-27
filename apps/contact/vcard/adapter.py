@@ -1,14 +1,24 @@
 from __future__ import annotations
 
 import datetime
-from typing import Any, Dict, List, Optional
+import logging
 import vobject
+
+from typing import Any, Dict, List, Optional
 
 from core.utils import recursive_getattr
 
 
+logger = logging.getLogger(__name__)
+
+
 class VCardAdapter:
-    """Adapter for a single vobject.vCard instance."""
+    """Adapter for a single vobject.vCard instance.
+
+    Tried with Google Contacts, exported via vCard format.
+    Supports parsing and accessing various vCard properties in a consistent way.
+    See vcard_sample() fixture for example usage. (TestVCardImportServiceIntegration.test_import_from_file_vcard_sample_creates_all_contacts())
+    """
 
     def __init__(self, vcard: vobject.base.Component):
         self.vcard = vcard
@@ -37,14 +47,6 @@ class VCardAdapter:
         return recursive_getattr(self, "vcard.fn.value")
 
     @property
-    def nickname(self) -> Optional[str]:
-        return recursive_getattr(self, "vcard.nickname.value")
-
-    @property
-    def email(self) -> Optional[str]:
-        return recursive_getattr(self, "vcard.email.value")
-
-    @property
     def emails(self) -> List[Dict[str, str]]:
         """Get all email addresses with their types"""
 
@@ -63,8 +65,7 @@ class VCardAdapter:
     @property
     def primary_email(self) -> Optional[str]:
         """Get the first email address"""
-        emails = self.emails
-        return emails[0]["value"] if emails else None
+        return self.emails[0]["value"] if self.emails else None
 
     @property
     def phones(self) -> List[Dict[str, str]]:
@@ -83,13 +84,14 @@ class VCardAdapter:
         return self._get_cached("phones", _get_phones)
 
     @property
-    def mobile_phone(self) -> Optional[str]:
-        """Get mobile phone number"""
-        for phone in self.phones:
-            if "CELL" in phone.get("type", []) or "MOBILE" in phone.get("type", []):
-                return phone["value"]
-        # Fallback to first phone if no mobile found
-        return self.phones[0]["value"] if self.phones else None
+    def primary_phone(self) -> str | None:
+        """Get first available phone (use this for general fallback)"""
+        from apps.contact.utils import normalize_phone_number
+
+        if self.phones:
+            return normalize_phone_number(self.phones[0]["value"])
+
+        return None
 
     @property
     def addresses(self) -> List[Dict[str, str]]:
@@ -97,40 +99,56 @@ class VCardAdapter:
 
         def _get_addresses():
             addresses = []
-            if hasattr(self.vcard, "adr_list"):
-                for adr in self.vcard.adr_list:
-                    addresses.append(self._parse_address(adr))
-            elif hasattr(self.vcard, "adr"):
-                addresses.append(self._parse_address(self.vcard.adr))
+            try:
+                # Check for adr_list first
+                if hasattr(self.vcard, "adr_list"):
+                    for adr in self.vcard.adr_list:
+                        parsed_address = self._parse_address(adr)
+                        if parsed_address:
+                            addresses.append(parsed_address)
+                # Fallback to single adr
+                elif hasattr(self.vcard, "adr"):
+                    parsed_address = self._parse_address(self.vcard.adr)
+                    if parsed_address:
+                        addresses.append(parsed_address)
+                # Alternative: Check vcard.contents
+                elif hasattr(self.vcard, "contents"):
+                    adr_list = self.vcard.contents.get("adr", [])
+                    for adr in adr_list:
+                        parsed_address = self._parse_address(adr)
+                        if parsed_address:
+                            addresses.append(parsed_address)
+            except Exception as e:
+                logger.debug(f"Error parsing addresses: {e}")
+
             return addresses
 
         return self._get_cached("addresses", _get_addresses)
 
     @property
-    def primary_address(self) -> Optional[str]:
+    def primary_address(self) -> str | None:
         """Get formatted primary address"""
         addresses = self.addresses
         return addresses[0]["full"] if addresses else None
 
     # Organization info
     @property
-    def organization(self) -> Optional[str]:
+    def organization(self) -> str | None:
         org = recursive_getattr(self, "vcard.org.value")
         if isinstance(org, list):
             return org[0] if org else None
         return org
 
     @property
-    def job_title(self) -> Optional[str]:
+    def job_title(self) -> str | None:
         return recursive_getattr(self, "vcard.title.value")
 
     @property
-    def department(self) -> Optional[str]:
+    def department(self) -> str | None:
         return recursive_getattr(self, "vcard.role.value")
 
     @property
-    def birthday(self) -> Optional[datetime.date]:
-        breakpoint()
+    def birthday(self) -> datetime.date | None:
         birthday_str = recursive_getattr(self, "vcard.bday.value")
         if birthday_str:
             try:
@@ -140,25 +158,18 @@ class VCardAdapter:
         return None
 
     @property
-    def anniversary(self) -> Optional[datetime.date]:
-        anniversary_str = recursive_getattr(self, "vcard.x_anniversary.value")
-        if anniversary_str:
-            try:
-                return datetime.datetime.strptime(str(anniversary_str), "%Y-%m-%d").date()
-            except (ValueError, TypeError):
-                return None
-
-    @property
-    def photo_url(self) -> Optional[str]:
+    def photo_url(self) -> str | None:
+        breakpoint()
         return recursive_getattr(self, "vcard.photo.value")
 
     @property
     def websites(self) -> List[str]:
-        return recursive_getattr(self, "vcard.url.value", [])
-
-    @property
-    def social_profiles(self) -> dict:
-        return recursive_getattr(self, "vcard.x_social_profiles.value", {})
+        websites = []
+        url_list = recursive_getattr(self, "vcard.url_list", [])
+        for url in url_list:
+            if hasattr(url, "value"):
+                websites.append(url.value)
+        return websites
 
     @property
     def notes(self) -> Optional[str]:
@@ -169,14 +180,13 @@ class VCardAdapter:
         return recursive_getattr(self, "vcard.url.value", [])
 
     # Utility methods
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization"""
         return {
             "first_name": self.first_name,
             "middle_name": self.middle_name,
             "last_name": self.last_name,
             "full_name": self.full_name,
-            "nickname": self.nickname,
             "emails": self.emails,
             "phones": self.phones,
             "addresses": self.addresses,
@@ -184,12 +194,11 @@ class VCardAdapter:
             "job_title": self.job_title,
             "department": self.department,
             "birthday": self.birthday,
-            "anniversary": self.anniversary,
             "urls": self.urls,
             "notes": self.notes,
         }
 
-    def _parse_address(self, adr) -> Dict[str, str]:
+    def _parse_address(self, adr) -> dict[str, str]:
         """Parse address object into dictionary"""
         if hasattr(adr, "value"):
             value = adr.value
