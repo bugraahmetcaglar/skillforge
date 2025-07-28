@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 
 from datetime import timedelta
+from typing import Any
 from celery import shared_task
 from django.utils import timezone
 
@@ -32,7 +33,7 @@ def task_cleanup_inactive_contacts(self) -> str:
 
 
 @shared_task(bind=True, name="task_save_contact")
-def task_save_contact(self, contact_data: dict):
+def task_save_contact(self, contact_data: dict[str, Any]):
     """Save contact data to the database with optional photo processing.
     Args:
         contact_data (dict): Contact data to save, including photo information.

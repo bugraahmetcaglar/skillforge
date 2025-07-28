@@ -98,7 +98,7 @@ class VCardImportService:
                 self.vcard_file_content = raw_content.decode("latin-1")
         except Exception as err:
             logger.error(f"Failed to read vCard file: {err}")
-            raise ValueError(f"Could not read vCard file")
+            raise ValueError(f"Could not read vCard file") from err
         finally:
             try:
                 self.vcard_file.close()  # Always try to close the file
