@@ -245,13 +245,6 @@ def normalize_phone_number(phone):
 ```
 Normalize Turkish phone numbers to +90XXXXXXXXXX format, keeps non-Turkish numbers in original format.
 
-### generate_external_id() (`apps/contact/utils.py`)
-```python
-def generate_external_id(data, source):
-    ...
-```
-Generate unique external ID for contact using MD5 hash of data and source prefix.
-
 ## 🗃️ Import Sources
 
 ### Supported Sources
@@ -332,14 +325,18 @@ def validate_vcard_file(self, value):
 
 ## 🔧 Background Tasks
 
-### cleanup_inactive_contacts() (`apps/contact/tasks.py`)
+### task_cleanup_inactive_contacts() (`apps/contact/tasks.py`)
 ```python
-def cleanup_inactive_contacts():
+def task_cleanup_inactive_contacts(self) -> str:
     ...
 ```
 Permanently delete contacts that have been inactive for more than 30 days, contacts are already backed up when deactivated.
 
-### save_contacts_task() (`apps/contact/tasks.py`)
+### task_save_contacts() (`apps/contact/tasks.py`)
+```python
+def task_save_contacts(self, user_id: str, contacts: list[dict]) -> str:
+    ...
+```
 ```python
 def save_contacts_task(user_id, contacts):
     ...

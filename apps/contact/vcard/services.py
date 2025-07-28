@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-import base64
 import logging
 from typing import Any, Optional
+import ulid
 from vobject import base as vobject
 
 from apps.contact.enums import SourceEnum
-from apps.contact.models import Contact
-from apps.contact.utils import generate_unique_external_id
 from apps.contact.vcard.adapter import VCardAdapter
 from apps.user.models import User
 
@@ -15,135 +13,129 @@ logger = logging.getLogger(__name__)
 
 
 class VCardImportService:
-    """Service for importing vCard files"""
+    """
+    VCardImportService to handle importing contacts from vCard files.
+    This service reads a vCard file, parses it, and saves the contacts to the database.
+    It also validates the user and file before processing.
 
-    def __init__(self, user: User | None):
-        if not user:
+    Attributes:
+        user (User): The user who owns the contacts.
+        vcard_file (Any): The vCard file to import.
+        vcard_file_content (Optional[str]): The content of the vCard file after reading and decoding.
+        contacts_data (list[dict]): Parsed contact data from the vCard file.
+
+    Methods:
+        get_file_content() -> str: Reads and decodes the vCard file content.
+        _parse_vcards(content: str) -> list[dict]: Parses vCard content into a list of contact data dictionaries.
+        import_contacts() -> dict: Imports contacts from the vCard file and saves them to the database.
+        _adapter_to_contact_data(adapter: VCardAdapter, index: int) -> dict[str, str] | None:
+            Converts VCardAdapter data to Contact model format.
+        _generate_photo_name(contact_data: dict) -> str: Generates a photo name based on contact information.
+        _save_contacts(contacts_data: list[dict]) -> dict: Saves contacts to the database.
+
+    Raises:
+        ValueError: If any errors occur during import or validation.
+    """
+
+    def __init__(self, user: User, vcard_file: Any):
+        """Initialize the service with user and vCard file.
+        Args:
+            user (User): The user who owns the contacts.
+            vcard_file (Any): The vCard file to import.
+        Raises:
+            ValueError: If user is not provided or if vCard file is invalid.
+        """
+        self.user = user
+        self.vcard_file = vcard_file
+        self.vcard_file_content: Optional[str] = None
+
+        self._validate_user()
+        self._validate_file()
+
+    def _validate_user(self):
+        # Ensure user is provided and is a valid User instance
+        if not self.user:
             raise ValueError("User must be provided for vCard import")
 
-        self.user = user
+        # Check if user is an instance of User model
+        if not isinstance(self.user, User):
+            raise ValueError("Invalid user type, expected User instance")
 
-    def import_from_file(self, vcard_file: Any) -> dict[str, Any]:
-        """Import contacts from vCard file"""
+        return True
+
+    def _validate_file(self):
+        # if vcard_file is not provided
+        if not self.vcard_file:
+            raise ValueError("No vCard file provided")
+
+        # if vcard_file is empty
+        if self.vcard_file.size == 0:
+            raise ValueError("vCard file is empty")
+
+        # if vcard_file is not a .vcf extension
+        if not self.vcard_file.name.endswith(".vcf"):
+            raise ValueError("File must be a .vcf format")
+
+        # if vcard_file is not a file-like object
+        if not hasattr(self.vcard_file, "read"):
+            raise ValueError("Invalid vCard file format")
+
+        return True
+
+    # Reads the file, decodes it, and returns the content
+    def get_vcard_file_content(self) -> str:
+        # Check if content is already cached
+        if self.vcard_file_content:
+            return self.vcard_file_content
+
         try:
-            content = self._read_file_content(vcard_file)
-            contacts_data = self._parse_vcards(content)
-            return self._save_contacts(contacts_data)
-        except Exception as err:
-            logger.exception(f"Import error: {err}")
-            return {"imported_count": 0, "failed_count": 0, "total_processed": 0, "errors": [str(err)]}
-
-    def _read_file_content(self, vcard_file: Any) -> str:
-        """Read and decode vCard file content"""
-        content = None
-
-        try:
-            # Ensure file is seeked to the start
-            vcard_file.seek(0)
-
-            # Read raw content
-            raw_content = vcard_file.read()
-
-            # Decode content
+            self.vcard_file.seek(0)
+            raw_content = self.vcard_file.read()
             try:
-                content = raw_content.decode("utf-8")
+                self.vcard_file_content = raw_content.decode("utf-8")
             except UnicodeDecodeError:
                 logger.warning("Failed to decode as UTF-8, trying latin-1")
-                content = raw_content.decode("latin-1")
-
-            return content
-
-        except Exception as e:
-            logger.error(f"Failed to read vCard file: {e}")
-            raise ValueError(f"Could not read vCard file: {e}")
-
+                self.vcard_file_content = raw_content.decode("latin-1")
+        except Exception as err:
+            logger.error(f"Failed to read vCard file: {err}")
+            raise ValueError(f"Could not read vCard file")
         finally:
             try:
-                vcard_file.close()
+                self.vcard_file.close()  # Always try to close the file
             except Exception:
-                pass
+                pass  # Ignore close errors
 
-    def _parse_vcards(self, content: str) -> list[dict]:
-        """Parse vCard content using VCardAdapter"""
-        contacts_data = []
+        if not self.vcard_file_content:
+            logger.error("vCard file content is empty after reading")
+            raise ValueError("vCard file content is empty")
+
+        return self.vcard_file_content
+
+    # Parse vCard content using VCardAdapter
+    def save_vcards(self) -> bool:
+        if not self.vcard_file_content:
+            self.get_vcard_file_content()
+
+        contact_data: dict[str, Any] = {}
 
         try:
-            # Parse all vCards from content
-            vcards = list(vobject.readComponents(content))
+            vcards = list(vobject.readComponents(self.vcard_file_content))
+
             for i, vcard in enumerate(vcards):
                 try:
                     adapter = VCardAdapter(vcard)
-                    contact_data = self._adapter_to_contact_data(adapter, i)
-                    if contact_data:
-                        contacts_data.append(contact_data)
+                    contact_data = adapter.to_contact_dict()
+                    contact_data["user"] = self.user.id
+                    contact_data["import_source"] = SourceEnum.VCARD.value
+                    contact_data["external_id"] = f"vcard_contact_{ulid.ULID()}"
+
+                    from apps.contact.tasks import task_save_contact
+
+                    task_save_contact.delay(contact_data=contact_data)  # type: ignore
                 except Exception as err:
                     logger.warning(f"Failed to process vCard {i}: {err}")
                     continue
+            return True
         except Exception as err:
             logger.error(f"Failed to parse vCard content: {err}")
-
-        return contacts_data
-
-    def _adapter_to_contact_data(self, adapter: VCardAdapter, index: int) -> Optional[dict[str, Any]]:
-        """Convert VCardAdapter data to Contact model format"""
-
-        if not adapter.full_name and not adapter.primary_email and not adapter.primary_phone:
-            return None
-
-        data = {
-            "first_name": adapter.first_name or "",
-            "middle_name": adapter.middle_name or "",
-            "last_name": adapter.last_name or "",
-            "full_name": adapter.full_name or "",
-            "email": adapter.primary_email or "",
-            "mobile_phone": adapter.primary_phone or "",
-            "addresses": adapter.addresses or [],
-            "organization": adapter.organization or "",
-            "job_title": adapter.job_title or "",
-            "department": adapter.department or "",
-            "birthday": adapter.birthday or None,
-            "websites": adapter.websites or [],
-            "notes": adapter.notes or "",
-            "photo_base64": adapter.photo_url or "",
-            "user": self.user,
-            "import_source": SourceEnum.VCARD.value,
-        }
-        # Generate unique external ID
-        data["external_id"] = generate_unique_external_id(data=data, index=index, user=self.user)
-        return data
-
-    def _save_contacts(self, contacts_data: list[dict]) -> dict[str, Any]:
-        """Save contacts to database"""
-        if not contacts_data:
-            return {
-                "imported_count": 0,
-                "failed_count": 0,
-                "total_processed": 0,
-                "errors": ["No valid contacts found"],
-            }
-
-        try:
-            # Prepare Contact objects
-            contact_objects = [Contact(**data) for data in contacts_data]
-
-            # Bulk create with ignore_conflicts to handle duplicates
-            created_contacts = Contact.objects.bulk_create(contact_objects, batch_size=500, ignore_conflicts=True)
-
-            imported_count = len(created_contacts)
-            failed_count = len(contact_objects) - imported_count
-
-            return {
-                "imported_count": imported_count,
-                "failed_count": failed_count,
-                "total_processed": len(contacts_data),
-                "errors": [],
-            }
-
-        except Exception as err:
-            logger.exception(f"Failed to save contacts: {err}")
-            return {
-                "imported_count": 0,
-                "failed_count": len(contacts_data),
-                "total_processed": len(contacts_data),
-                "errors": [str(err)],
-            }
+            raise ValueError("Failed to parse vCard content")

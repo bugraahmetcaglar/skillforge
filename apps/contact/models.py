@@ -96,7 +96,12 @@ class Contact(BaseModel):
 
     # Photo
     photo_url = models.URLField(blank=True, default="")
-    photo_base64 = models.TextField(blank=True, default="")
+    photo_file = models.FileField(
+        upload_to="contact_photos/",
+        blank=True,
+        null=True,
+        help_text="Optional photo file for the contact",
+    )
 
     deactivated_at = models.DateTimeField(blank=True, null=True)
 
