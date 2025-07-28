@@ -34,9 +34,9 @@ def task_cleanup_inactive_contacts(self) -> str:
 
 @shared_task(bind=True, name="task_save_contact")
 def task_save_contact(self, contact_data: dict[str, Any]):
-    """Save contact data to the database with optional photo processing.
+    """Save a contact to the database.
     Args:
-        contact_data (dict): Contact data to save, including photo information.
+        contact_data (dict): Contact data to save.
     Returns:
         bool: True if contact was saved successfully, False otherwise.
     """
