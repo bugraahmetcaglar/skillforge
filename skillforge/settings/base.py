@@ -249,7 +249,11 @@ LOGGING = {
 
 # Celery Configuration
 # https://docs.celeryproject.org/en/stable/userguide/configuration.html
-CELERY_BROKER_URL = f"redis://{os.environ.get('REDIS_HOST', 'redis')}:{os.environ.get('REDIS_PORT', '6379')}/0"
+REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD', '')
+if REDIS_PASSWORD:
+    CELERY_BROKER_URL = f"redis://:{REDIS_PASSWORD}@{os.environ.get('REDIS_HOST', 'redis')}:{os.environ.get('REDIS_PORT', '6379')}/0"
+else:
+    CELERY_BROKER_URL = f"redis://{os.environ.get('REDIS_HOST', 'redis')}:{os.environ.get('REDIS_PORT', '6379')}/0"
 CELERY_CACHE_BACKEND = "django-cache"
 # Celery Timezone
 CELERY_TIMEZONE = TIME_ZONE
