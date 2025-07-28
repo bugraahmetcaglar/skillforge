@@ -127,7 +127,7 @@ class VCardImportService:
                     contact_data = adapter.to_contact_dict()
                     contact_data["user"] = self.user.id
                     contact_data["import_source"] = SourceEnum.VCARD.value
-                    contact_data["external_id"] = f"vcard_contact_{ulid.ULID()}"
+                    contact_data["external_id"] = f"vcard_{ulid.ULID()}"
 
                     from apps.contact.tasks import task_save_contact
 
