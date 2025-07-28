@@ -10,33 +10,31 @@ def vcard_sample():
     """Sample vCard content for testing"""
 
     return """BEGIN:VCARD
-VERSION:3.0
+VERSION:2.1
 FN:John Michael Doe
 N:Doe;John;Michael;Mr.;Jr.
-NICKNAME:Johnny
-EMAIL;TYPE=WORK:john.doe@example.com
-EMAIL;TYPE=HOME:johnny@personal.com
-TEL;TYPE=CELL:0532 123 45 67
-TEL;TYPE=HOME:0212 555 1234
-TEL;TYPE=WORK:+90 216 444 5555
-TEL;TYPE=FAX:0212 555 1235
+EMAIL;WORK:john.doe@example.com
+EMAIL;HOME:johnny@personal.com
+TEL;CELL:0532 123 45 67
+TEL;HOME:0212 555 1234
+TEL;WORK:+90 216 444 5555
+TEL;FAX:0212 555 1235
 ORG:Example Corporation;Engineering Department
-TITLE:Senior Software Engineer
+TITLE:Software Engineer
 ROLE:Team Lead
 BDAY:1985-03-15
 ANNIVERSARY:2010-06-20
-ADR;TYPE=HOME:;;123 Main St;Istanbul;Marmara;34000;Turkey
-ADR;TYPE=WORK:;;456 Business Ave;Ankara;Central;06000;Turkey
+ADR;HOME:;;123 Main St;Istanbul;Marmara;34000;Turkey
+ADR;WORK:;;456 Business Ave;Ankara;Central;06000;Turkey
 URL:https://johndoe.com
 URL:https://linkedin.com/in/johndoe
-NOTE:Experienced software engineer specializing in Python and Django. Team lead with 10+ years experience.
+URL:https://github.com/johndoe
+NOTE:Python
 CATEGORIES:Business,Developer,Friend
-PHOTO:https://example.com/photos/john.jpg
 X-CUSTOM-FIELD:Custom Value
 END:VCARD
-
 BEGIN:VCARD
-VERSION:3.0
+VERSION:2.1
 FN:Jane Elizabeth Smith
 N:Smith;Jane;Elizabeth;;Dr.
 EMAIL:jane.smith@hospital.com
@@ -48,91 +46,135 @@ BDAY:1980-07-22
 ADR;TYPE=WORK:;;789 Health St;Izmir;Aegean;35000;Turkey
 NOTE:Cardiologist and department head
 END:VCARD
-
 BEGIN:VCARD
-VERSION:3.0
-FN:Ali Mehmet Veli
-N:Veli;Ali;Mehmet;;
-EMAIL:ali.veli@turkish-company.com.tr
-TEL:532 111 22 33
-TEL:0216 333 4444
-ORG:Türk Şirketi A.Ş.
-TITLE:Genel Müdür
-BDAY:1975-12-05
-NOTE:Turkish company executive with special characters: çığöşü
+VERSION:2.1
+N:Caglar;Bugra Ahmet;;;
+FN:Bugra Ahmet Caglar
+X-ANDROID-CUSTOM:vnd.android.cursor.item/nickname;Marliel;;;;;;;;;;;;;;
+X-ANDROID-CUSTOM:vnd.android.cursor.item/nickname;Marliel;1;;;;;;;;;;;;;
+TEL;CELL:+905323543683
+EMAIL;HOME:bugraahmetcaglar@gmail.com
+EMAIL:bugrahmetx@gmail.com
+EMAIL;WORK:bugra.caglar@bumper.co
+ADR;HOME:;;Bahcelievler Mahallesi;Ankara;;06490;Turkey
+ORG:B;Tech
+TITLE:Software Engineer
+URL:https://linkedin.com/in/bugraahmetcaglar
+URL:https://github.com/bugraahmetcaglar
+PHOTO;ENCODING=BASE64;JPEG:/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEU
+ AAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAA
+ AAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAA
+ ABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAACh
+ iVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMA
+ UgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAA
+ CSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQ
+ AAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbAB
+ lACAASQBuAGMALgAgADIAMAAxADb/2wBDAAIBAQEBAQIBAQECAgICAgQDAgICAgUEBAMEBgUG
+ BgYFBgYGBwkIBgcJBwYGCAsICQoKCgoKBggLDAsKDAkKCgr/2wBDAQICAgICAgUDAwUKBwYHC
+ goKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgr/wAARCA
+ BgAGADASIAAhEBAxEB/8QAHAAAAgMBAQEBAAAAAAAAAAAABQYABAcDAQII/8QARxAAAQQBAgM
+ DBwcHCwUBAAAAAgEDBAUGBxIAERMUISIVFyMkMZbUFiYyQUJWYgglUVK00tMzN1VhdoGElJWk
+ pRgnKFd1tf/EAB0BAAEEAwEBAAAAAAAAAAAAAAMCBAUGAAEHCAn/xABBEQACAQIEAgcEBQgLA
+ AAAAAABAhEDBAASITEFIgYTMkFCUXEUYYGRFTNSkvAjU1Rik6HT4nJzgqOywcPS1OHx/9oADA
+ MBAAIRAxEAPwD878TicTij4+eePpSJE7y7/wBHE7xTu/v7+InT6a8+e76uFrG5FFKulpIFDNg
+ 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
+ /wDWU/8ADUwycTicTgeIfH//2Q==
+
+BDAY:1995-07-04
 END:VCARD
-
 BEGIN:VCARD
-VERSION:3.0
+VERSION:2.1
 FN:Empty Contact Test
 END:VCARD
-
 BEGIN:VCARD
-VERSION:3.0
+VERSION:2.1
 FN:Minimal Contact
 EMAIL:minimal@test.com
-END:VCARD"""
-
-
-@pytest.fixture
-def valid_vcard_content() -> str:
-    """Valid vCard content with multiple contacts"""
-    return """BEGIN:VCARD
-VERSION:3.0
-FN:John Doe
-N:Doe;John;Middle;;
-TEL;TYPE=CELL:+905321234567
-EMAIL:john.doe@example.com
-ORG:Example Corp
-TITLE:Software Engineer
-END:VCARD
-
-BEGIN:VCARD
-VERSION:3.0
-FN:Jane Smith
-N:Smith;Jane;;;
-TEL;TYPE=HOME:05329876543
-EMAIL:jane.smith@example.com
-BDAY:1990-05-15
-END:VCARD
-
-BEGIN:VCARD
-VERSION:3.0
-FN:Ali Veli
-N:Veli;Ali;;;
-TEL;TYPE=CELL:532 111 22 33
-EMAIL:ali.veli@example.com
-ORG:Turkish Company
-END:VCARD"""
-
-
-@pytest.fixture
-def invalid_vcard_content() -> str:
-    """Invalid vCard content for error testing"""
-    return """INVALID:VCARD
-FN:Invalid Contact
-EMAIL:invalid@example.com
-END:VCARD"""
-
-
-@pytest.fixture
-def empty_vcard_content() -> str:
-    """Empty vCard with no contacts"""
-    return """BEGIN:VCARD
-VERSION:3.0
-END:VCARD"""
-
-
-@pytest.fixture
-def turkish_phone_vcard() -> str:
-    """vCard with various Turkish phone number formats"""
-    return """BEGIN:VCARD
-VERSION:3.0
-FN:Turkish Contact
-N:Contact;Turkish;;;
-TEL;TYPE=CELL:05321234567
-TEL;TYPE=HOME:0212 555 1234
-TEL;TYPE=WORK:532-123-45-67
 END:VCARD"""
 
 
