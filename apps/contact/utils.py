@@ -1,8 +1,4 @@
-import hashlib
 import re
-
-from apps.contact.enums import SourceEnum
-from apps.user.models import User
 
 
 def normalize_phone_number(phone: str) -> str:
@@ -70,30 +66,3 @@ def normalize_phone_number(phone: str) -> str:
         case _:
             # Non-Turkish formats: keep original input
             return phone
-
-
-def generate_external_id(data: str, source: str) -> str:
-    clean_str = data.strip().lower()
-
-    # Generate MD5 hash
-    hash_object = hashlib.md5(clean_str.encode("utf-8"))
-    return f"{source}_sf_{hash_object.hexdigest()}"
-
-
-def generate_unique_external_id(data: dict, index: int, user: User | None) -> str:
-    """Generate unique external_id for contact"""
-    # Combine multiple unique fields
-    components = [
-        data.get("mobile_phone", ""),
-        data.get("email", ""),
-        data.get("full_name", ""),
-        data.get("first_name", ""),
-        data.get("last_name", ""),
-        str(index),  # Ensure uniqueness
-        str(user.id) if user else "",  # User-specific
-    ]
-
-    # Filter out empty components and join
-    unique_data = "-".join(filter(None, components))
-
-    return generate_external_id(data=unique_data, source=SourceEnum.VCARD.value)

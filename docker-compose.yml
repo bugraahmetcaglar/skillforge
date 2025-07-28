@@ -18,7 +18,6 @@ services:
     depends_on:
       - db
       - redis
-      - qcluster
     env_file:
       - ./dev.env
     restart: unless-stopped
@@ -47,12 +46,10 @@ services:
     hostname: redis
     restart: unless-stopped
 
-  qcluster:
-    container_name: qcluster-1
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: python manage.py qcluster
+  celery:
+    container_name: celery-1
+    build: .
+    command: celery -A skillforge worker -l info --concurrency=4
     volumes:
       - .:/code
     depends_on:
@@ -60,7 +57,34 @@ services:
       - redis
     env_file:
       - ./dev.env
-    restart: on-failure
+    restart: unless-stopped
+
+  celery-beat:
+    container_name: celery-beat-1
+    build: .
+    command: celery -A skillforge beat -l info
+    volumes:
+      - .:/code
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - ./dev.env
+    restart: unless-stopped
+
+  flower:
+    container_name: flower-1
+    build: .
+    command: celery -A skillforge flower --port=5555
+    volumes:
+      - .:/code
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+    env_file:
+      - ./dev.env
+    restart: unless-stopped
 
   ollama:
     container_name: ollama-1

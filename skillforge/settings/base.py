@@ -47,7 +47,6 @@ LOCAL_APPS = [
     "core",
     "apps.user",
     "apps.contact",
-    "apps.log",
     "apps.reminder",
     "apps.finance",
     "apps.thirdparty",
@@ -60,7 +59,8 @@ THIRD_PARTY_APPS = [
     "drf_yasg",
     "corsheaders",
     "django_redis",
-    "django_q",
+    "django_celery_beat",
+    "django_celery_results",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS + THIRD_PARTY_APPS
@@ -221,73 +221,48 @@ CACHES = {
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
 
-# Django-Q2 Configuration
-# -------------------------------------
-Q_CLUSTER = {
-    "name": "skillforge",
-    "workers": 4,  # Number of workers
-    "recycle": 500,  # Recycle workers after this many tasks
-    "timeout": 60,  # Task timeout in seconds
-    "compress": True,  # Compress task data
-    "save_limit": 250,  # Number of successful tasks to keep in database
-    "queue_limit": 500,  # Maximum number of tasks in queue
-    "cpu_affinity": 1,  # CPU affinity for workers
-    "label": "Django Q2",  # Label for the cluster
-    "redis": {
-        "host": os.environ.get("REDIS_HOST", "redis"),
-        "port": int(os.environ.get("REDIS_PORT", 6379)),
-        "db": 0,
-        "password": os.environ.get("REDIS_PASSWORD", None),
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
     },
-    "orm": "default",  # Use default database for task storage
-    "bulk": 10,  # Number of tasks to process at once
-    "sync": False,  # Run tasks asynchronously
-    "catch_up": True,  # Catch up on missed scheduled tasks
-    "retry": 120,  # Retry failed tasks after this many seconds
-    "max_attempts": 3,  # Maximum retry attempts
-    "error_reporter": {
-        "apps.log.tasks.cleanup_old_logs": "apps.log.tasks.cleanup_task_hook",
-        "apps.log.tasks.warm_log_cache": "apps.log.tasks.cache_warming_task_hook",
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'celery': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
 }
 
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "verbose": {
-            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
-            "style": "{",
-        },
-        "simple": {
-            "format": "{levelname} {message}",
-            "style": "{",
-        },
-    },
-    "handlers": {
-        "console": {
-            "level": "WARNING",
-            "class": "logging.StreamHandler",
-            "formatter": "simple",
-        },
-        "database": {
-            "level": "WARNING",  # ERROR, WARNING, CRITICAL
-            "class": "apps.log.handlers.DatabaseLogHandler",
-        },
-    },
-    "loggers": {
-        "django": {
-            "handlers": ["console", "database"],
-            "level": "WARNING",
-            "propagate": False,
-        },
-        "apps": {
-            "handlers": ["console", "database"],
-            "level": "WARNING",
-            "propagate": False,
-        },
-    },
-}
+# Celery Configuration
+# https://docs.celeryproject.org/en/stable/userguide/configuration.html
+REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD', '')
+if REDIS_PASSWORD:
+    CELERY_BROKER_URL = f"redis://:{REDIS_PASSWORD}@{os.environ.get('REDIS_HOST', 'redis')}:{os.environ.get('REDIS_PORT', '6379')}/0"
+else:
+    CELERY_BROKER_URL = f"redis://{os.environ.get('REDIS_HOST', 'redis')}:{os.environ.get('REDIS_PORT', '6379')}/0"
+CELERY_CACHE_BACKEND = "django-cache"
+# Celery Timezone
+CELERY_TIMEZONE = TIME_ZONE
+
+# Worker Configuration
+CELERY_WORKER_CONCURRENCY = 4
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 # Telegram Bot Configuration
 TELEGRAM_REMINDER_BOT_TOKEN = os.environ.get("TELEGRAM_REMINDER_BOT_TOKEN")

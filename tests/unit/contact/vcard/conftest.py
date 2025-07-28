@@ -25,7 +25,7 @@ ADR;HOME:;;123 Main St;Istanbul;Marmara;34000;Turkey
 ADR;WORK:;;456 Business Ave;Ankara;Central;06000;Turkey
 URL:https://johndoe.com
 URL:https://linkedin.com/in/johndoe
-URL:https://github.com/bugraahmetcaglar
+URL:https://github.com/johndoe
 NOTE:Python
 CATEGORIES:Business,Developer,Friend
 X-CUSTOM-FIELD:Custom Value
@@ -54,13 +54,8 @@ EMAIL;HOME:bugraahmetcaglar@gmail.com
 EMAIL:bugrahmetx@gmail.com
 EMAIL;WORK:bugra.caglar@bumper.co
 ADR;HOME:;;Bahcelievler Mahallesi;Ankara;;06490;Turkey
-ADR;HOME:;;Bahcelievler Mahallesi;Ankara;;06490;Turkey
 ORG:B;Tech
 TITLE:Software Engineer
-ORG:B;Tech
-TITLE:Software Engineer
-URL:https://linkedin.com/in/bugraahmetcaglar
-URL:https://github.com/bugraahmetcaglar
 URL:https://linkedin.com/in/bugraahmetcaglar
 URL:https://github.com/bugraahmetcaglar
 PHOTO;ENCODING=BASE64;JPEG:/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEU
