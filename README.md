@@ -1,4 +1,4 @@
-# SkillForge
+ # SkillForge
 
 Modern Django REST API platform with user management, contact handling, AI integration, and financial tracking.
 
@@ -6,7 +6,6 @@ Modern Django REST API platform with user management, contact handling, AI integ
 
 - **User Management**: JWT auth, role-based permissions
 - **Contact Management**: vCard import, duplicate detection
-- **AI Integration**: Turkish NLP, Telegram bot
 - **Finance Tracking**: Multi-currency subscriptions
 - **Background Tasks**: Django-Q processing
 - **Advanced Logging**: Structured logs with analytics
@@ -15,7 +14,7 @@ Modern Django REST API platform with user management, contact handling, AI integ
 
 - Django 5.2.2 + DRF 3.16.0
 - PostgreSQL 16.2 + Redis
-- Django-Q2 for background tasks
+- Celery for background tasks
 - JWT authentication
 - pytest + model-bakery testing
 
