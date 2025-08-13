@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import datetime
 import logging
 import vobject
@@ -25,7 +26,7 @@ class VCardAdapter:
         self._cache: Dict[str, Any] = {}
 
     def _get_cached(self, key: str, getter_func) -> Any:
-        """Cache expensive operations"""
+        """Cache results of expensive property getters."""
         if key not in self._cache:
             self._cache[key] = getter_func()
         return self._cache[key]
@@ -131,6 +132,7 @@ class VCardAdapter:
         addresses = self.addresses
         return addresses[0]["full"] if addresses else None
 
+    # TODO: bug with -> ORG:B;Tech
     # Organization info
     @property
     def organization(self) -> str | None:
@@ -158,11 +160,6 @@ class VCardAdapter:
         return None
 
     @property
-    def photo_url(self) -> str | None:
-        breakpoint()
-        return recursive_getattr(self, "vcard.photo.value")
-
-    @property
     def websites(self) -> List[str]:
         websites = []
         url_list = recursive_getattr(self, "vcard.url_list", [])
@@ -176,27 +173,108 @@ class VCardAdapter:
         return recursive_getattr(self, "vcard.note.value")
 
     @property
-    def urls(self) -> List[str]:
-        return recursive_getattr(self, "vcard.url.value", [])
+    def photo_url(self) -> str | None:
+        """Get photo URL if available, None if not set."""
+
+        def _get_photo_url():
+            try:
+                if not hasattr(self.vcard, "photo"):
+                    return None
+
+                photo_value = self.vcard.photo.value
+
+                # If it's a string and looks like URL, return it
+                if isinstance(photo_value, str) and photo_value.startswith(("http://", "https://")):
+                    return photo_value
+
+                return None
+            except Exception as e:
+                logger.debug(f"Error getting photo URL: {e}")
+                return None
+
+        return self._get_cached("photo_url", _get_photo_url)
+
+    @property
+    def vcard_photo_base64(self) -> str | None:
+        """Get base64 photo data if it's binary, None if it's a URL or not set."""
+
+        def _get_photo_base64():
+            try:
+                if not hasattr(self.vcard, "photo"):
+                    return None
+
+                photo_value = self.vcard.photo.value
+
+                # If it's binary data, convert to base64
+                if isinstance(photo_value, bytes):
+                    return base64.b64encode(photo_value).decode("utf-8")
+
+                return None
+            except Exception as e:
+                logger.debug(f"Error getting photo base64: {e}")
+                return None
+
+        return self._get_cached("vcard_photo_base64", _get_photo_base64)
+
+    @property
+    def vcard_mime_type(self) -> str | None:
+        """Get MIME type for base64 photo, None if it's URL"""
+
+        def _get_mime_type():
+            try:
+                if not hasattr(self.vcard, "photo"):
+                    return None
+
+                photo_value = self.vcard.photo.value
+
+                # Only return MIME type for binary data
+                if isinstance(photo_value, bytes):
+                    if photo_value.startswith(b"\xff\xd8"):
+                        return "image/jpeg"
+                    elif photo_value.startswith(b"\x89PNG"):
+                        return "image/png"
+                    elif photo_value.startswith(b"GIF87a") or photo_value.startswith(b"GIF89a"):
+                        return "image/gif"
+                    elif "JPEG" in photo_value.decode("utf-8", errors="ignore"):
+                        return "image/jpeg"  # default
+                    elif "PNG" in photo_value.decode("utf-8", errors="ignore"):
+                        return "image/png"
+                    elif "GIF" in photo_value.decode("utf-8", errors="ignore"):
+                        return "image/gif"
+                    else:
+                        return None
+                return None
+            except Exception as e:
+                logger.debug(f"Error getting MIME type: {e}")
+                return None
+
+        return self._get_cached("vcard_mime_type", _get_mime_type)
 
     # Utility methods
-    def to_dict(self) -> dict[str, Any]:
+    def to_contact_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization"""
-        return {
-            "first_name": self.first_name,
-            "middle_name": self.middle_name,
-            "last_name": self.last_name,
-            "full_name": self.full_name,
-            "emails": self.emails,
-            "phones": self.phones,
-            "addresses": self.addresses,
-            "organization": self.organization,
-            "job_title": self.job_title,
-            "department": self.department,
-            "birthday": self.birthday,
-            "urls": self.urls,
-            "notes": self.notes,
-        }
+        try:
+            return {
+                "first_name": self.first_name,
+                "middle_name": self.middle_name,
+                "last_name": self.last_name,
+                "full_name": self.full_name,
+                "emails": self.emails,
+                "phones": self.phones,
+                "addresses": self.addresses,
+                "organization": self.organization,
+                "job_title": self.job_title,
+                "department": self.department,
+                "birthday": self.birthday.isoformat() if self.birthday else None,
+                "websites": self.websites,
+                "photo_url": self.photo_url,
+                "notes": self.notes,
+                # TODO: "vcard_photo_base64": self.vcard_photo_base64,
+                # TODO: "vcard_mime_type": self.vcard_mime_type,
+            }
+        except Exception as err:
+            logger.error(f"Error converting vCard to dict: {err}")
+            raise ValueError(f"Failed to convert vCard to dict")
 
     def _parse_address(self, adr) -> dict[str, str]:
         """Parse address object into dictionary"""

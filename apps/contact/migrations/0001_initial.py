@@ -74,7 +74,7 @@ class Migration(migrations.Migration):
                 ("photo_url", models.URLField(blank=True, default="")),
                 ("deactivated_at", models.DateTimeField(blank=True, null=True)),
                 (
-                    "owner",
+                    "user",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="contacts",
@@ -83,8 +83,8 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                "ordering": ["first_name", "last_name"],
-                "unique_together": {("owner", "external_id", "import_source")},
+                "ordering": ["first_name", "middle_name", "last_name"],
+                "unique_together": {("user", "external_id", "import_source")},
             },
         ),
         migrations.CreateModel(
@@ -93,7 +93,7 @@ class Migration(migrations.Migration):
                 ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
                 ("created_at", models.DateTimeField(db_index=True, default=django.utils.timezone.now)),
                 ("last_updated", models.DateTimeField(auto_now=True)),
-                ("contact_data", models.JSONField(blank=True, default=list)),
+                ("contact_data", models.JSONField(blank=True, default=dict)),
                 ("is_active", models.BooleanField(default=True)),
                 (
                     "contact",
@@ -107,7 +107,7 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "owner",
+                    "user",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="contact_backups",
@@ -115,8 +115,6 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={
-                "ordering": ["-created_at"],
-            },
+            options={"ordering": ["-created_at"]},
         ),
     ]

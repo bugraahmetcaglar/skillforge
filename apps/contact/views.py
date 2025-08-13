@@ -36,20 +36,21 @@ class VCardImportAPIView(BaseAPIView):
         serializer.is_valid(raise_exception=True)
 
         # Cast request.user to User type for type safety
-        user: User = cast(User, request.user)
-        service = VCardImportService(user=user)
+        user = cast(User, request.user)
         try:
-            result = service.import_from_file(serializer.validated_data["vcard_file"])
+            service = VCardImportService(user=user, vcard_file=serializer.validated_data["vcard_file"])
+            service.save_vcards()
+
             return self.success_response(
-                data=result,
-                message=f"Imported {result.get('imported_count', 0)} of {result.get('total_processed', 0)} contacts",
-                status_code=status.HTTP_201_CREATED,
+                message="Contacts will be processed in the background.", status_code=status.HTTP_202_ACCEPTED
             )
-        except ValueError as err:
-            return self.error_response(str(err), status_code=status.HTTP_400_BAD_REQUEST)
         except Exception as err:
             logger.error(f"Import error: {err}")
-            return self.error_response(f"Import error: {err}", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return self.error_response(
+                error_message="Failed to import contacts",
+                status_code=status.HTTP_400_BAD_REQUEST,
+                exception_msg=str(err),
+            )
 
 
 class ContactListAPIView(BaseListAPIView):

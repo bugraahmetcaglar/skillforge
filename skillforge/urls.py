@@ -56,10 +56,6 @@ urlpatterns = [
     # Contacts API endpoints
     path("api/v1/contact/", include("apps.contact.urls")),
     path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
-
-    # Log API endpoints
-    path("api/v1/logs/", include("apps.log.urls")),
-    
 ]
 
 if settings.DEBUG:
