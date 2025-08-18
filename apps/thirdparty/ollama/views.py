@@ -32,9 +32,10 @@ class OllamaHealthCheckAPIView(BaseAPIView):
                     error_message="Ollama service is not healthy",
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 )
-        except Exception as e:
-            logger.exception(f"Ollama status check failed: {e}")
+        except Exception as err:
+            logger.exception(f"Ollama status check failed: {err}")
             return self.error_response(
                 error_message="Failed to check Ollama service status",
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                exception_msg=str(err),
             )

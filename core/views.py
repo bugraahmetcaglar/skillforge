@@ -76,26 +76,26 @@ class BaseAPIView(GenericAPIView):
         status_code: int = 200,
         message: str | None = None,
     ) -> Response:
-        response_data = {"success": True}
+        response_data: dict[str, Any] = {"success": True}
 
         if message:
-            response_data["message"] = message  # type: ignore
+            response_data["message"] = message
 
         if data is not None:
-            response_data["data"] = data  # type: ignore
+            response_data["data"] = data
 
         return Response(response_data, status=status_code)
 
     def error_response(
         self,
         error_message: str = "",
-        error_code: str | None = None,
         status_code: int = 400,
+        exception_msg: str | None = None,
     ) -> Response:
-        response_data = {"success": False, "detail": error_message}
+        response_data: dict[str, Any] = {"success": False, "detail": error_message}
 
-        if error_code and settings.DEBUG:
-            response_data["code"] = error_code
+        if exception_msg and settings.DEBUG:
+            response_data["exception_msg"] = exception_msg
 
         return Response(response_data, status=status_code)
 

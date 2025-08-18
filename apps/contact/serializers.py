@@ -12,43 +12,22 @@ logger = logging.getLogger(__name__)
 class VCardImportSerializer(serializers.Serializer):
     vcard_file = serializers.FileField(help_text="vCard file (.vcf or .vcard)", allow_empty_file=False)
 
-    # TODO: Type hinting for file validation
-    def validate_vcard_file(self, value) -> Any:
-        """Validate uploaded vCard file"""
+    def validate_vcard_file(self, value):
+        if not hasattr(value, "name"):  # Ensure the file has a name attribute
+            raise serializers.ValidationError("Invalid file format. File must have a name.")
 
         if not value.name.lower().endswith((".vcf", ".vcard")):
             raise serializers.ValidationError("Invalid file format. Please upload a .vcf or .vcard file.")
 
-        # Check file size (max 5MB)
-        if value.size > 5 * 1024 * 1024:
-            raise serializers.ValidationError("File too large. Maximum size is 5MB.")
-
         if value.size == 0:
             raise serializers.ValidationError("Empty file provided.")
 
-        try:
-            # TODO: Improve performance
-            # Save current position
-            current_position = value.tell()
+        if value.size > 5 * 1024 * 1024:  # 5MB limit
+            raise serializers.ValidationError("File too large. Maximum size is 5MB.")
 
-            # Read content for validation
-            content = value.read().decode("utf-8")
+        if not hasattr(value, "read"):
+            raise serializers.ValidationError("Invalid file format. File must be readable.")
 
-            # Reset file pointer
-            value.seek(current_position)
-
-            content_stripped = content.strip()
-            if not content_stripped.startswith("BEGIN:VCARD"):
-                raise serializers.ValidationError("Invalid vCard format. File must start with 'BEGIN:VCARD'.")
-
-            if not content_stripped.endswith("END:VCARD"):
-                raise serializers.ValidationError("Invalid vCard format. File must end with 'END:VCARD'.")
-
-        except UnicodeDecodeError:
-            raise serializers.ValidationError("Invalid file encoding. File must be UTF-8 encoded.")
-        except Exception as err:
-            logger.exception("Error reading vCard file", exc_info=True)
-            raise serializers.ValidationError(f"Error reading file: {str(err)}")
         return value
 
 
